@@ -146,6 +146,17 @@ CREATE TABLE IF NOT EXISTS login_attempts (
   attempted_at VARCHAR(20)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Persistent "remember me" logins (30 days): selector + HMAC-SHA256 of the
+-- validator. The validator itself is never stored. Auto-created by the app.
+CREATE TABLE IF NOT EXISTS remember_tokens (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  selector VARCHAR(32) NOT NULL UNIQUE,
+  token_hash TEXT NOT NULL,
+  expires_at INT NOT NULL,
+  created_at INT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- The 11 seeded courses (also seeded automatically by the app if the table is empty).
 INSERT INTO courses (title, class_level, paper, price_bdt, lessons, description) VALUES
 ('English for Today — Class 6 (1st Paper)', '6', '1st Paper', 699, 20, 'NCTB English for Today, Class 6: reading, vocabulary, speaking and writing.'),

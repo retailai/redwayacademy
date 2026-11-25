@@ -82,6 +82,9 @@ function init_db(PDO $pdo): void {
         "CREATE TABLE IF NOT EXISTS lessons (id $ai, course_id $int, lesson_no $int, title $txt NOT NULL, body $txt NOT NULL, created_at $ts)",
         // Login rate-limit: 5 failed attempts per phone in 15 minutes (DB-backed, survives restart).
         "CREATE TABLE IF NOT EXISTS login_attempts (id $ai, phone {$vc(20)}, attempted_at $ts)",
+        // Persistent "remember me" logins: selector + hashed validator, 30 days.
+        // The validator itself is never stored — only its HMAC-SHA256 hash.
+        "CREATE TABLE IF NOT EXISTS remember_tokens (id $ai, user_id $int NOT NULL, selector {$vc(32)} NOT NULL UNIQUE, token_hash $txt NOT NULL, expires_at $int NOT NULL, created_at $int NOT NULL)",
     ];
     foreach ($tables as $sql) $pdo->exec($sql);
 

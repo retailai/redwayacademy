@@ -217,6 +217,8 @@ if ($path === '/register') {
             run('INSERT INTO users (name, phone, password_hash, role, class_level, linked_student_phone, is_super_admin, created_at) VALUES (?,?,?,?,?,?,?,?)',
                 [$name, $phone, password_hash($password, PASSWORD_DEFAULT), $role, $class_level, $linked ?: null, $is_first_teacher ? 1 : 0, now_str()]);
             $_SESSION['user_id'] = (int)db()->lastInsertId();
+            // Registering logs you in — keep the login for 30 days, like other sites.
+            issue_remember_token((int)$_SESSION['user_id']);
         } catch (PDOException $e) {
             if (str_contains($e->getMessage(), 'Duplicate') || $e->getCode() === '23000') {
                 flash(t('phone_registered')); redirect('/login');
@@ -229,6 +231,11 @@ if ($path === '/register') {
     render('register', ['title' => 'Register — Redway Academy']);
 }
 if ($path === '/login') {
+    // Already logged in? Go to the dashboard — never show the login form again.
+    if ($method === 'GET') {
+        $me = current_user();
+        if ($me) redirect(dashboard_url($me));
+    }
     if ($method === 'POST') {
         $phone = digits_only(post('phone')); $password = $_POST['password'] ?? '';
         if (login_blocked($phone)) {
@@ -258,6 +265,9 @@ if ($path === '/login') {
             }
             session_regenerate_id(true);
             $_SESSION['user_id'] = (int)$u['id'];
+            // "Remember me" is on by default — stay logged in for 30 days,
+            // across browser closes and across the role subdomains.
+            if (isset($_POST['remember'])) issue_remember_token((int)$u['id']);
             flash(sprintf(t('welcome_back'), $u['name']));
             redirect('/dashboard');
         }
@@ -267,7 +277,8 @@ if ($path === '/login') {
     render('login', ['title' => 'Login — Redway Academy']);
 }
 if ($path === '/logout' && $method === 'GET') {
-    session_destroy(); start_session(); redirect('/');
+    logout_user();
+    redirect('/');
 }
 
 // --- Dashboard / progress / feedback / notifications ------------------------

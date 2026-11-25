@@ -14,13 +14,119 @@ function start_session(): void {
 
 function current_user(): ?array {
     start_session();
+    if (empty($_SESSION['user_id'])) try_remember_login();
     if (empty($_SESSION['user_id'])) return null;
     $st = db()->prepare('SELECT * FROM users WHERE id=?');
     $st->execute([(int)$_SESSION['user_id']]);
     $u = $st->fetch();
     if (!$u) return null;
-    if ((int)($u['active'] ?? 1) === 0) { session_destroy(); start_session(); return null; }
+    if ((int)($u['active'] ?? 1) === 0) { logout_user(); return null; }
     return $u;
+}
+
+/**
+ * Persistent "remember me" login — 30 days, like other websites.
+ * A random selector identifies the token row; a random validator proves
+ * ownership. Only HMAC-SHA256(validator, SECRET_KEY) is stored in the DB,
+ * so a leaked database cannot be used to log in. The cookie is HttpOnly,
+ * Secure in production, SameSite=Lax, and shared on .redwayacademy.com so
+ * one login works on the main site and all role subdomains.
+ */
+function remember_cookie_options(int $expires): array {
+    return ['expires' => $expires, 'path' => '/', 'domain' => cookie_domain(),
+        'secure' => APP_ENV === 'production', 'httponly' => true, 'samesite' => 'Lax'];
+}
+function issue_remember_token(int $user_id): void {
+    $selector = bin2hex(random_bytes(12));
+    $validator = bin2hex(random_bytes(32));
+    $hash = hash_hmac('sha256', $validator, SECRET_KEY);
+    $expires = time() + REMEMBER_LIFETIME;
+    $st = db()->prepare('INSERT INTO remember_tokens (user_id, selector, token_hash, expires_at, created_at) VALUES (?,?,?,?,?)');
+    $st->execute([$user_id, $selector, $hash, $expires, time()]);
+    setcookie(REMEMBER_COOKIE, $selector . ':' . $validator, remember_cookie_options($expires));
+    $_COOKIE[REMEMBER_COOKIE] = $selector . ':' . $validator;
+}
+function clear_remember_cookie(): void {
+    setcookie(REMEMBER_COOKIE, '', remember_cookie_options(time() - 3600));
+    // Also clear a host-only variant, so a stale pre-fix cookie can never
+    // resurrect a login after logout.
+    $opts = remember_cookie_options(time() - 3600);
+    $opts['domain'] = '';
+    setcookie(REMEMBER_COOKIE, '', $opts);
+    unset($_COOKIE[REMEMBER_COOKIE]);
+}
+/** Revoke only this device's token (logout on this device). */
+function revoke_remember_token(): void {
+    $raw = $_COOKIE[REMEMBER_COOKIE] ?? '';
+    if ($raw !== '' && str_contains($raw, ':')) {
+        [$selector] = explode(':', $raw, 2);
+        $st = db()->prepare('DELETE FROM remember_tokens WHERE selector=?');
+        $st->execute([$selector]);
+    }
+    clear_remember_cookie();
+}
+/** Revoke every persistent login for a user (password change / suspected theft). */
+function revoke_all_remember_tokens(int $user_id): void {
+    $st = db()->prepare('DELETE FROM remember_tokens WHERE user_id=?');
+    $st->execute([$user_id]);
+}
+/**
+ * Validate the remember-me cookie. On success, restore the session and
+ * rotate the token (single-use: the old token is deleted, a fresh one is
+ * issued), so a stolen cookie stops working after the real user returns.
+ * Returns the user row, or null.
+ */
+function try_remember_login(): ?array {
+    $raw = $_COOKIE[REMEMBER_COOKIE] ?? '';
+    if ($raw === '' || !str_contains($raw, ':')) return null;
+    [$selector, $validator] = explode(':', $raw, 2);
+    if ($selector === '' || $validator === '') return null;
+    $st = db()->prepare('SELECT * FROM remember_tokens WHERE selector=?');
+    $st->execute([$selector]);
+    $row = $st->fetch();
+    if (!$row) { clear_remember_cookie(); return null; }
+    if ((int)$row['expires_at'] < time()) {
+        $del = db()->prepare('DELETE FROM remember_tokens WHERE id=?');
+        $del->execute([(int)$row['id']]);
+        clear_remember_cookie();
+        return null;
+    }
+    if (!hash_equals((string)$row['token_hash'], hash_hmac('sha256', $validator, SECRET_KEY))) {
+        // Wrong validator for a known selector: possible theft — revoke all.
+        revoke_all_remember_tokens((int)$row['user_id']);
+        clear_remember_cookie();
+        return null;
+    }
+    $st = db()->prepare('SELECT * FROM users WHERE id=?');
+    $st->execute([(int)$row['user_id']]);
+    $u = $st->fetch();
+    if (!$u || (int)($u['active'] ?? 1) === 0) {
+        $del = db()->prepare('DELETE FROM remember_tokens WHERE id=?');
+        $del->execute([(int)$row['id']]);
+        clear_remember_cookie();
+        return null;
+    }
+    $del = db()->prepare('DELETE FROM remember_tokens WHERE id=?');
+    $del->execute([(int)$row['id']]);
+    issue_remember_token((int)$u['id']);
+    session_regenerate_id(true);
+    $_SESSION['user_id'] = (int)$u['id'];
+    return $u;
+}
+/** Log out everywhere for this session: session + remember token + cookies. */
+function logout_user(): void {
+    start_session();
+    revoke_remember_token();
+    $_SESSION = [];
+    $expired = time() - 3600;
+    // Clear the session cookie on the shared domain and the host-only variant.
+    foreach ([cookie_domain(), ''] as $domain) {
+        $opts = ['expires' => $expired, 'path' => '/', 'domain' => $domain,
+            'secure' => APP_ENV === 'production', 'httponly' => true, 'samesite' => 'Lax'];
+        setcookie(session_name(), '', $opts);
+    }
+    session_destroy();
+    start_session();
 }
 function is_super_admin(?array $u): bool { return $u !== null && ($u['role'] ?? '') === 'teacher' && (int)($u['is_super_admin'] ?? 0) === 1; }
 

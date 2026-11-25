@@ -8,7 +8,12 @@ function digits_only(string $s): string { return preg_replace('/\D/', '', $s) ??
 function base_url(string $path = ''): string { return '/' . ltrim($path, '/'); }
 
 function flash(string $msg): void {
-    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+    // Use start_session() (auth.php) when available: it runs only after
+    // config.php has set the cookie params/name. A raw session_start() here
+    // would create a default host-only PHPSESSID cookie and lose the
+    // shared .redwayacademy.com login.
+    if (function_exists('start_session')) start_session();
+    elseif (session_status() !== PHP_SESSION_ACTIVE) session_start();
     $_SESSION['_flash'][] = $msg;
 }
 function flashes(): array {

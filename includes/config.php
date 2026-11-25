@@ -47,6 +47,24 @@ define('DB_PASS', envv('DB_PASS', ''));
 define('UPLOAD_DIR', envv('UPLOAD_FOLDER', dirname(__DIR__) . '/uploads'));
 define('MAX_UPLOAD_MB', (int)envv('MAX_UPLOAD_MB', '8'));
 define('SESSION_LIFETIME', 8 * 3600); // 8 hours
+define('REMEMBER_LIFETIME', 30 * 86400); // 30 days — "remember me" persistent login
+define('REMEMBER_COOKIE', 'REDWAY_REMEMBER');
+
+/**
+ * Cookie domain shared by the main site and the role subdomains.
+ * The apex domain redwayacademy.com must ALSO get '.redwayacademy.com' —
+ * a host-only cookie set on the main site is never sent to the subdomains,
+ * which is why a login on redwayacademy.com was lost on
+ * student./parent./admin.redwayacademy.com (and looked like "login
+ * doesn't stay"). Localhost / other hosts keep a host-only cookie.
+ */
+function cookie_domain(): string {
+    $host = strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '', 2)[0]);
+    if ($host === 'redwayacademy.com' || str_ends_with($host, '.redwayacademy.com')) {
+        return '.redwayacademy.com';
+    }
+    return '';
+}
 
 // Secure session cookies.
 ini_set('session.use_strict_mode', '1');
@@ -60,10 +78,8 @@ if (SECRET_KEY !== '' && SECRET_KEY !== 'redway-dev-secret-change-me') {
 }
 // One login across the main domain and the role subdomains
 // (student./parent./admin.redwayacademy.com share the session cookie).
-$__host = strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '', 2)[0]);
-$__cookie_domain = str_ends_with($__host, '.redwayacademy.com') ? '.redwayacademy.com' : '';
 session_set_cookie_params([
-    'lifetime' => SESSION_LIFETIME, 'path' => '/', 'domain' => $__cookie_domain,
+    'lifetime' => SESSION_LIFETIME, 'path' => '/', 'domain' => cookie_domain(),
     'httponly' => true, 'samesite' => 'Lax', 'secure' => APP_ENV === 'production',
 ]);
 

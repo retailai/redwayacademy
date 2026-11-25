@@ -18,6 +18,7 @@
       <option value="teacher"<?= ($subdomain_role ?? null) === 'teacher' ? ' selected' : '' ?>><?= t('role_teacher') ?></option>
     </select>
     <span class="field-hint"><?= t('login_as_hint') ?></span>
+    <label class="remember"><input type="checkbox" name="remember" value="1" checked> <?= t('remember_me') ?></label>
     <div class="form-actions"><button class="btn" type="submit"><?= t('login_btn') ?></button></div>
   </form>
   <p><?= t('no_account') ?> <a href="/register"><?= t('nav_register') ?></a></p>
