@@ -154,6 +154,29 @@ function init_db(PDO $pdo): void {
     // Seed lessons once (only when the lessons table is empty).
     require_once __DIR__ . '/lessons_seed.php';
     seed_lessons($pdo);
+    // Spoken English lecture sheets v2 — refresh old short bodies.
+    // seed_lessons() only runs on an empty lessons table, so databases
+    // created before v2 still hold the old one-paragraph Spoken bodies.
+    // When the version flag is not yet '2', rewrite the Spoken course's
+    // 24 lesson bodies (matched by course + lesson_no) and set the flag.
+    // Idempotent: running it again writes the same text. Academic
+    // lessons are never touched here.
+    $flag_st = $pdo->prepare('SELECT v FROM settings WHERE k=?');
+    $flag_st->execute(['lessons_content_version']);
+    $flag = $flag_st->fetch();
+    if (!$flag || (string)$flag['v'] !== '2') {
+        $spoken = $pdo->query("SELECT id FROM courses WHERE paper='Spoken English' ORDER BY id LIMIT 1")->fetch();
+        if ($spoken) {
+            $upd = $pdo->prepare('UPDATE lessons SET body=? WHERE course_id=? AND lesson_no=?');
+            for ($n = 1; $n <= 24; $n++) {
+                $upd->execute([spoken_lecture_sheet($n), (int)$spoken['id'], $n]);
+            }
+        }
+        $upsert = str_starts_with(db_dsn(), 'mysql:')
+            ? "INSERT INTO settings (k, v) VALUES ('lessons_content_version','2') ON DUPLICATE KEY UPDATE v=VALUES(v)"
+            : "INSERT INTO settings (k, v) VALUES ('lessons_content_version','2') ON CONFLICT(k) DO UPDATE SET v=excluded.v";
+        $pdo->prepare($upsert)->execute();
+    }
     // Backfill: the earliest teacher is the Super Admin.
     $first = $pdo->query("SELECT id FROM users WHERE role='teacher' ORDER BY id LIMIT 1")->fetch();
     if ($first) $pdo->exec('UPDATE users SET is_super_admin=1 WHERE id=' . (int)$first['id']);

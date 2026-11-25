@@ -155,6 +155,8 @@ const I18N = [
     'buy_now' => 'Buy this course (bKash / Nagad)', 'buy_now_price' => 'Buy now — %s',
     'lessons_locked' => 'Lessons open after enrolment — buy the course to unlock them.',
     'module' => 'Module %s', 'module_lessons' => 'Lessons %s–%s',
+    'module_spoken_1' => 'Foundations of Speaking', 'module_spoken_2' => 'Everyday English',
+    'module_spoken_3' => 'Opinions & Discussions', 'module_spoken_4' => 'Fluency & Confidence',
     'open_course' => 'Open course',
     // Lesson
     'back_course' => 'Back to course', 'prev_lesson' => '← Previous lesson', 'next_lesson' => 'Next lesson →',
@@ -363,6 +365,8 @@ const I18N = [
     'buy_now' => 'এই কোর্সটি কিনুন (বিকাশ / নগদ)', 'buy_now_price' => 'এখনই কিনুন — %s',
     'lessons_locked' => 'ভর্তির পর লেসন খুলবে — কোর্সটি কিনে আনলক করুন।',
     'module' => 'মডিউল %s', 'module_lessons' => 'লেসন %s–%s',
+    'module_spoken_1' => 'কথা বলার ভিত্তি', 'module_spoken_2' => 'দৈনন্দিন ইংরেজি',
+    'module_spoken_3' => 'মতামত ও আলোচনা', 'module_spoken_4' => 'সাবলীলতা ও আত্মবিশ্বাস',
     'open_course' => 'কোর্স খুলুন',
     'back_course' => 'কোর্সে ফিরুন', 'prev_lesson' => '← আগের লেসন', 'next_lesson' => 'পরের লেসন →',
     'my_courses_link' => 'আমার কোর্স', 'curriculum' => 'পাঠক্রম',

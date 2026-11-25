@@ -116,6 +116,16 @@ function live_class_text(): string {
 function track_label(string $track): string {
     return $track === 'spoken' ? t('track_spoken') : t('track_academic');
 }
+/** Module heading for the syllabus accordion and lesson sidebar.
+ * The Spoken English course has named modules (1–4); every other course
+ * keeps the plain "Module N" heading. */
+function module_heading(array $course, int $m): string {
+    $head = sprintf(t('module'), num($m));
+    if ((string)($course['paper'] ?? '') === 'Spoken English' && $m >= 1 && $m <= 4) {
+        $head .= ' — ' . t('module_spoken_' . $m);
+    }
+    return $head;
+}
 /** The two tracks, in display order. */
 function tracks(): array { return ['academic', 'spoken']; }
 /** Free SSC/HSC retake is a campaign: on by default, flippable in Admin Panel. */

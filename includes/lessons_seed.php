@@ -25,8 +25,14 @@ function lesson_titles_for_course(string $paper, string $class_level): array {
     return $titles[$key] ?? [];
 }
 
-/** Short, real teaching text for a lesson, chosen by topic keywords in the title. */
-function lesson_body_for(string $paper, string $title): string {
+/** Short, real teaching text for a lesson, chosen by topic keywords in the title.
+ * Spoken English lessons use the full lecture sheets in spoken_sheets.php. */
+require_once __DIR__ . '/spoken_sheets.php';
+function lesson_body_for(string $paper, string $title, int $lesson_no = 0): string {
+    if ($paper === 'Spoken English' && $lesson_no >= 1 && $lesson_no <= 24) {
+        $sheet = spoken_lecture_sheet($lesson_no);
+        if ($sheet !== '') return $sheet;
+    }
     $t = strtolower($title);
     $bodies = [
         'noun' => "A noun names a person, a place, a thing or an idea. Example: Rahim is a person, Dhaka is a place, book is a thing, and honesty is an idea.\n\nবাংলা: যে শব্দ দিয়ে কোনো ব্যক্তি, স্থান, বস্তু বা ভাবের নাম বোঝায়, তাকে Noun বলে।\n\nPractice: Underline the nouns in this sentence — \"Rahim reads a book in Dhaka every morning.\" (Answer: Rahim, book, Dhaka, morning.)",
@@ -112,7 +118,7 @@ function seed_lessons(PDO $pdo): void {
         $n = (int)$course['lessons'];
         for ($i = 1; $i <= $n; $i++) {
             $title = $titles[$i - 1] ?? ('Lesson ' . $i . ' — ' . $course['paper']);
-            $st->execute([(int)$course['id'], $i, $title, lesson_body_for($course['paper'], $title), $now]);
+            $st->execute([(int)$course['id'], $i, $title, lesson_body_for($course['paper'], $title, $i), $now]);
         }
     }
 }

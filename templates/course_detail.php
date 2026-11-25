@@ -41,7 +41,7 @@ foreach ($lessons as $l) {
         <?php for ($m = 1; $m <= (int)ceil((int)$course['lessons'] / 6); $m++): ?>
         <?php $from = ($m - 1) * 6 + 1; $to = min($m * 6, (int)$course['lessons']); ?>
         <div class="module">
-          <button class="head" type="button" data-acc><?= sprintf(t('module'), num($m)) ?> — <?= sprintf(t('module_lessons'), num($from), num($to)) ?> <span aria-hidden="true">▾</span></button>
+          <button class="head" type="button" data-acc><?= e(module_heading($course, $m)) ?> — <?= sprintf(t('module_lessons'), num($from), num($to)) ?> <span aria-hidden="true">▾</span></button>
           <div class="body">
             <?php for ($n = $from; $n <= $to; $n++): ?>
             <div class="lesson-row"><span><?= t('lesson') ?> <?= num($n) ?></span><span class="lock" aria-label="Locked">🔒</span></div>
@@ -55,7 +55,7 @@ foreach ($lessons as $l) {
         <?php foreach ($modules as $m => $ls): ?>
         <?php $from = ($m - 1) * 6 + 1; $to = $from + count($ls) - 1; ?>
         <div class="module<?= $m === 1 ? ' open' : '' ?>">
-          <button class="head" type="button" data-acc><?= sprintf(t('module'), num($m)) ?> — <?= sprintf(t('module_lessons'), num($from), num($to)) ?> <span aria-hidden="true">▾</span></button>
+          <button class="head" type="button" data-acc><?= e(module_heading($course, $m)) ?> — <?= sprintf(t('module_lessons'), num($from), num($to)) ?> <span aria-hidden="true">▾</span></button>
           <div class="body">
             <?php foreach ($ls as $l): ?>
             <div class="lesson-row"><a href="/course/<?= (int)$course['id'] ?>/lesson/<?= (int)$l['lesson_no'] ?>"><?= t('lesson') ?> <?= num((int)$l['lesson_no']) ?> — <?= e($l['title']) ?></a><span class="done-dot" aria-hidden="true">›</span></div>

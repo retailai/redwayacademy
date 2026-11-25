@@ -12,7 +12,7 @@ foreach ($all_lessons as $l) {
     <h2><?= e($course['title']) ?></h2>
     <?php foreach ($modules as $m => $ls): ?>
       <div class="module<?= (int)ceil((int)$lesson['lesson_no'] / 6) === $m ? ' open' : '' ?>">
-        <button class="head" type="button" data-acc><?= sprintf(t('module'), num($m)) ?> <span aria-hidden="true">▾</span></button>
+        <button class="head" type="button" data-acc><?= e(module_heading($course, $m)) ?> <span aria-hidden="true">▾</span></button>
         <div class="body">
           <?php foreach ($ls as $l): ?>
           <a class="curr-item<?= (int)$l['lesson_no'] === (int)$lesson['lesson_no'] ? ' active' : '' ?>" href="/course/<?= (int)$course['id'] ?>/lesson/<?= (int)$l['lesson_no'] ?>"<?php if ((int)$l['lesson_no'] === (int)$lesson['lesson_no']): ?> aria-current="true"<?php endif; ?>>
