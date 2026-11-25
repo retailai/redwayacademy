@@ -9,9 +9,6 @@
 <div class="grid">
 <?php foreach ($courses as $c): ?>
   <article class="card course-card">
-    <?php if ($c['paper'] === 'Spoken English'): ?>
-    <div class="card-media"><img src="/assets/img/spoken-english-group.jpg" alt="Students speaking English confidently in a group discussion" width="1920" height="1280" loading="lazy" onerror="this.classList.add('img-failed')"></div>
-    <?php endif; ?>
     <div class="card-top"><span class="unit"><?= e($c['paper']) ?></span></div>
     <h3><?= e($c['title']) ?></h3>
     <p><?= e($c['description']) ?></p>

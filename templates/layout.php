@@ -53,6 +53,7 @@
   <div class="container footer-inner">
     <span class="brand-logo"><img src="/assets/img/logo.png" alt="Redway Academy — Mistakes Mark the Way" width="2400" height="819" loading="lazy"></span>
     <p>Redway Academy &bull; <a href="https://redwayacademy.com">redwayacademy.com</a> &bull; Contact: <a href="tel:<?= CONTACT_PHONE ?>"><?= CONTACT_PHONE ?></a> &bull; bKash / Nagad: <?= CONTACT_PHONE ?><br>
+    <?= CONTACT_ADDRESS ?><br>
     <?= BRAND_SLOGAN_BN ?> &bull; Mistakes Mark the Way<br>
     NCTB English for Class 6&ndash;12 &bull; English for Today &bull; English 2nd Paper &bull; Spoken English</p>
   </div>

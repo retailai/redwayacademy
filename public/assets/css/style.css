@@ -59,7 +59,7 @@ section{margin-top:28px}
 
 /* --- HERO (reference .hero-card) --- */
 .hero{padding:20px 0 0}
-.hero-card{background:var(--surface);border:1px solid var(--line);border-radius:24px;overflow:hidden;box-shadow:var(--shadow);display:grid;grid-template-columns:1.05fr .95fr}
+.hero-card{background:var(--surface);border:1px solid var(--line);border-radius:24px;overflow:hidden;box-shadow:var(--shadow);display:grid;grid-template-columns:1fr}
 @media(max-width:760px){.hero-card{grid-template-columns:1fr}}
 .hero-text{padding:28px 26px 24px}
 .hero-text h1{font-size:42px;margin:14px 0 8px;letter-spacing:-.02em}
@@ -67,10 +67,6 @@ section{margin-top:28px}
 .hero-text p{color:var(--muted);font-size:17px;margin:0 0 16px}
 .hero-text .bangla{color:var(--green);font-weight:700;font-size:20px}
 .hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
-.hero-img{min-height:280px}
-.hero-img img,.hero-media img{width:100%;height:100%;object-fit:cover;display:block}
-.hero-media{border-radius:24px;overflow:hidden;box-shadow:var(--shadow);aspect-ratio:3/2;background:var(--teal)}
-.hero-media img.img-failed,.split-media img.img-failed,.card-media img.img-failed{display:none}
 @media(max-width:640px){.hero-text h1{font-size:34px}}
 
 /* Badge pill (reference) */
@@ -108,11 +104,8 @@ section{margin-top:28px}
 .btn-green,.btn.green{background:var(--green2);color:#fff}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 
-/* --- Story split --- */
-.split{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center}
-@media(max-width:760px){.split{grid-template-columns:1fr}}
-.split-media{border-radius:20px;overflow:hidden;box-shadow:var(--shadow);aspect-ratio:3/2;background:var(--teal)}
-.split-media img{width:100%;height:100%;object-fit:cover;display:block}
+/* --- Story split (text-only, no photo) --- */
+.split{display:grid;grid-template-columns:1fr;gap:24px;align-items:center}
 
 /* --- Levels / class pills / search (reference) --- */
 .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
@@ -147,8 +140,6 @@ section{margin-top:28px}
 .card-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
 .card-actions button,.card-actions a{flex:1}
 .card-actions .btn{border-radius:12px}
-.card-media{margin:-18px -18px 14px;border-radius:20px 20px 0 0;overflow:hidden;aspect-ratio:3/2;background:var(--teal)}
-.card-media img{width:100%;height:100%;object-fit:cover;display:block}
 .course-card{display:flex;flex-direction:column}
 .course-card .card-actions{margin-top:auto;padding-top:14px}
 /* Red Pen Method step cards: number + label, meaning is not colour-only */

@@ -68,3 +68,4 @@ define('BRAND_SLOGAN_EN', 'Mistakes Mark the Way');
 define('BRAND_SLOGAN_BN', 'ভুল থেকেই শেখা, ভুল করেই জেতা');
 // Contact mobile — also the bKash / Nagad payment number.
 define('CONTACT_PHONE', '01712506612');
+define('CONTACT_ADDRESS', 'Nikunja 2, Khilkhet, Dhaka-1229');

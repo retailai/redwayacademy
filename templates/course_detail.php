@@ -1,9 +1,4 @@
 <article class="detail open">
-  <?php if ($course['paper'] === 'Spoken English'): ?>
-  <figure class="split-media" style="margin-bottom:24px">
-    <img src="/assets/img/spoken-english-group.jpg" alt="Students speaking English confidently in a group discussion" width="1920" height="1280" loading="lazy" onerror="this.classList.add('img-failed')">
-  </figure>
-  <?php endif; ?>
   <h1><?= e($course['title']) ?></h1>
   <p><span class="unit"><?= e($course['paper']) ?></span> Class <?= e($course['class_level']) ?></p>
   <p><?= e($course['description']) ?></p>

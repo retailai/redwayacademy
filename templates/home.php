@@ -16,9 +16,6 @@
         <div class="stat"><b>3</b><span>Logins: student, parent, teacher</span></div>
       </div>
     </div>
-    <figure class="hero-img" style="margin:0">
-      <img src="/assets/img/hero-classroom.jpg" alt="Bangladeshi high-school students studying English together in a bright classroom" width="1920" height="1280" fetchpriority="high" onerror="this.classList.add('img-failed')">
-    </figure>
   </div>
 </section>
 
@@ -36,9 +33,6 @@
     <h2 id="story-heading">Our story</h2>
     <p><strong>Red</strong> = the teacher's red pen mark, identifying a mistake. <strong>Way</strong> = the path. So <strong>Redway</strong> = the path of learning by identifying mistakes. A student who understands and corrects a mistake remembers it for much longer. We do not say "fail" — we say: ভুল করো, বোঝো, সঠিক করো.</p>
   </div>
-  <figure class="split-media" style="margin:0">
-    <img src="/assets/img/red-pen-teacher.jpg" alt="A teacher marking a student's English notebook with a red pen" width="1920" height="1280" loading="lazy" onerror="this.classList.add('img-failed')">
-  </figure>
 </section>
 
 <section aria-labelledby="method-heading">
@@ -56,9 +50,6 @@
   <div class="grid">
   <?php foreach ($courses as $c): ?>
     <article class="card course-card">
-      <?php if ($c['paper'] === 'Spoken English'): ?>
-      <div class="card-media"><img src="/assets/img/spoken-english-group.jpg" alt="Students speaking English confidently in a group discussion" width="1920" height="1280" loading="lazy" onerror="this.classList.add('img-failed')"></div>
-      <?php endif; ?>
       <div class="card-top"><span class="unit"><?= e($c['paper']) ?></span></div>
       <h3><?= e($c['title']) ?></h3>
       <p><?= e($c['description']) ?></p>
@@ -93,6 +84,7 @@
   <h2 id="contact-heading">Contact us — যোগাযোগ</h2>
   <div class="dialogue">
     <p>Call us: <strong><a href="tel:<?= CONTACT_PHONE ?>"><?= CONTACT_PHONE ?></a></strong></p>
+    <p>Visit us: <strong><?= CONTACT_ADDRESS ?></strong></p>
     <p>Course payment: <strong>bKash / Nagad: <?= CONTACT_PHONE ?></strong> — send money to this number and submit the TrxID on the buy page.</p>
   </div>
 </section>
