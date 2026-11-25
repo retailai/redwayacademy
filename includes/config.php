@@ -66,3 +66,5 @@ session_set_cookie_params([
 // Brand.
 define('BRAND_SLOGAN_EN', 'Mistakes Mark the Way');
 define('BRAND_SLOGAN_BN', 'ভুল থেকেই শেখা, ভুল করেই জেতা');
+// Contact mobile — also the bKash / Nagad payment number.
+define('CONTACT_PHONE', '01712506612');

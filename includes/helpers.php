@@ -46,17 +46,6 @@ function render(string $view, array $vars = []): void {
     exit; // A rendered page is the end of the request; never fall through to the 404 handler.
 }
 
-/** Inline SVG logo (no binary/image files). Same mark as the Flask site. */
-function logo_svg(int $size = 44): string {
-    return '<svg viewBox="0 0 64 64" width="' . $size . '" height="' . $size . '" aria-hidden="true">'
-        . '<circle cx="32" cy="32" r="30" fill="#fff" stroke="#ddd" stroke-width="2"/>'
-        . '<path d="M12 22 L22 44 L32 28 L42 44 L52 14" fill="none" stroke="#EA4335" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>'
-        . '<path d="M22 44 L32 28" fill="none" stroke="#FBBC05" stroke-width="5" stroke-linecap="round"/>'
-        . '<path d="M32 28 L42 44" fill="none" stroke="#34A853" stroke-width="5" stroke-linecap="round"/>'
-        . '<path d="M42 44 L52 14" fill="none" stroke="#4285F4" stroke-width="5" stroke-linecap="round"/>'
-        . '<path d="M46 10 L56 12 L52 22 Z" fill="#4285F4"/></svg>';
-}
-
 function notify(string $phone, string $message, string $kind = 'info'): void {
     if ($phone === '') return;
     $st = db()->prepare('INSERT INTO notifications (recipient_phone, message, kind, created_at) VALUES (?,?,?,?)');
