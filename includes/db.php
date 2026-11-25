@@ -1,0 +1,114 @@
+<?php
+/**
+ * Redway Academy — PDO database layer.
+ * Same code works with MySQL (Hostinger) and SQLite (local test).
+ * Tables are created automatically if missing; the 11 courses are seeded.
+ */
+require_once __DIR__ . '/config.php';
+
+function db_dsn(): string {
+    if (DB_DSN !== '') return DB_DSN;
+    if (DB_NAME !== '') {
+        return 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4';
+    }
+    // Local fallback: SQLite file next to the project.
+    return 'sqlite:' . dirname(__DIR__) . '/storage/redway.db';
+}
+
+function db(): PDO {
+    static $pdo = null;
+    if ($pdo !== null) return $pdo;
+    $dsn = db_dsn();
+    $opts = [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ];
+    $pdo = str_starts_with($dsn, 'sqlite:')
+        ? new PDO($dsn, null, null, $opts)
+        : new PDO($dsn, DB_USER, DB_PASS, $opts);
+    if (str_starts_with($dsn, 'sqlite:')) {
+        $pdo->exec('PRAGMA foreign_keys = ON');
+    }
+    init_db($pdo);
+    return $pdo;
+}
+
+function db_driver(): string {
+    return str_starts_with(db_dsn(), 'sqlite:') ? 'sqlite' : 'mysql';
+}
+
+/** The 11 seeded courses: Class 6,7,8,9-10,11-12 x 1st/2nd Paper + Spoken English. */
+function seed_courses(): array {
+    return [
+        ['English for Today — Class 6 (1st Paper)', '6', '1st Paper', 699, 20, 'NCTB English for Today, Class 6: reading, vocabulary, speaking and writing.'],
+        ['English 2nd Paper — Class 6 (Grammar and Composition)', '6', '2nd Paper', 699, 20, 'NCTB English Grammar and Composition, Class 6: nouns, verbs, tenses and sentences.'],
+        ['English for Today — Class 7 (1st Paper)', '7', '1st Paper', 699, 20, 'NCTB English for Today, Class 7: reading, vocabulary, speaking and writing.'],
+        ['English 2nd Paper — Class 7 (Grammar and Composition)', '7', '2nd Paper', 699, 20, 'NCTB English Grammar and Composition, Class 7: grammar rules, practice and writing.'],
+        ['English for Today — Class 8 (1st Paper)', '8', '1st Paper', 799, 22, 'NCTB English for Today, Class 8: reading, vocabulary, speaking and writing.'],
+        ['English 2nd Paper — Class 8 (Grammar and Composition)', '8', '2nd Paper', 799, 22, 'NCTB English Grammar and Composition, Class 8: grammar rules, practice and writing.'],
+        ['English for Today — Class 9-10 (1st Paper)', '9-10', '1st Paper', 999, 24, 'NCTB English for Today, Classes 9-10 (SSC): seen, unseen, literature and writing.'],
+        ['English 2nd Paper — Class 9-10 (Grammar and Composition)', '9-10', '2nd Paper', 999, 24, 'NCTB English Grammar and Composition, Classes 9-10 (SSC): The Noun, Tenses, Modals, Conditionals, Passive, Speech, plus Letters, CV, E-mails, Paragraphs, Completing Stories, Graphs & Charts.'],
+        ['English for Today — Class 11-12 (1st Paper)', '11-12', '1st Paper', 1199, 24, 'NCTB English for Today, Classes 11-12 (HSC, 1st Paper): reading and writing.'],
+        ['English 2nd Paper — Class 11-12 (Grammar and Composition)', '11-12', '2nd Paper', 1199, 24, 'NCTB Grammar & Composition, Classes 11-12 (HSC, 2nd Paper): grammar and writing.'],
+        ['Spoken English — Speak with Confidence', '6-12', 'Spoken English', 1499, 24, "Redway's own speaking course: conversation, pronunciation, fluency, group discussion, presentations and interview English, with teacher feedback."],
+    ];
+}
+
+function init_db(PDO $pdo): void {
+    $mysql = str_starts_with(db_dsn(), 'mysql:');
+    $id = $mysql ? 'INT AUTO_INCREMENT PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT';
+    $ai = $mysql ? 'INT AUTO_INCREMENT PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT';
+    $int = 'INTEGER';
+    $txt = $mysql ? 'TEXT' : 'TEXT';
+    $bool = $mysql ? 'TINYINT(1)' : 'INTEGER';
+    $ts = $mysql ? 'VARCHAR(20)' : 'TEXT';
+    $vc = fn($n) => $mysql ? "VARCHAR($n)" : 'TEXT';
+
+    $tables = [
+        "CREATE TABLE IF NOT EXISTS users (id $ai, name $txt NOT NULL, phone {$vc(20)} NOT NULL UNIQUE, password_hash $txt NOT NULL, role {$vc(20)} NOT NULL, class_level {$vc(20)}, linked_student_phone {$vc(20)}, active $bool NOT NULL DEFAULT 1, is_super_admin $bool NOT NULL DEFAULT 0, created_at $ts)",
+        "CREATE TABLE IF NOT EXISTS courses (id $ai, title $txt NOT NULL, class_level {$vc(20)}, paper {$vc(30)}, price_bdt $int, lessons $int, description $txt, active $bool NOT NULL DEFAULT 1)",
+        "CREATE TABLE IF NOT EXISTS homework (id $ai, title $txt NOT NULL, class_level {$vc(20)}, details $txt, teacher_phone {$vc(20)}, created_at $ts)",
+        "CREATE TABLE IF NOT EXISTS submissions (id $ai, homework_id $int, student_phone {$vc(20)}, student_name $txt, answer $txt, file_link $txt, status {$vc(20)} DEFAULT 'submitted', teacher_comment $txt, created_at $ts)",
+        "CREATE TABLE IF NOT EXISTS progress_notes (id $ai, student_phone {$vc(20)}, student_name $txt, score $int, suggestion $txt, teacher_phone {$vc(20)}, created_at $ts)",
+        "CREATE TABLE IF NOT EXISTS feedback (id $ai, author_phone {$vc(20)}, author_name $txt, message $txt, created_at $ts)",
+        "CREATE TABLE IF NOT EXISTS testimonials (id $ai, author_name $txt, role {$vc(20)}, class_level {$vc(20)}, message $txt, status {$vc(20)} DEFAULT 'pending', created_at $ts)",
+        "CREATE TABLE IF NOT EXISTS orders (id $ai, course_id $int, course_title $txt, student_phone {$vc(20)}, student_name $txt, method {$vc(20)}, trxid {$vc(40)}, amount_bdt $int, status {$vc(20)} DEFAULT 'pending', created_at $ts)",
+        "CREATE TABLE IF NOT EXISTS retake_registrations (id $ai, student_name $txt, phone {$vc(20)}, exam {$vc(20)}, exam_year {$vc(10)}, roll_no {$vc(40)}, reg_no {$vc(40)}, result_text $txt, admit_file $txt, tabulation_file $txt, status {$vc(20)} DEFAULT 'needs_review', reasons $txt, created_at $ts)",
+        "CREATE TABLE IF NOT EXISTS notifications (id $ai, recipient_phone {$vc(20)}, message $txt, kind {$vc(20)}, is_read $bool NOT NULL DEFAULT 0, created_at $ts)",
+        "CREATE TABLE IF NOT EXISTS checkin_codes (id $ai, pin {$vc(10)} NOT NULL, class_level {$vc(20)}, teacher_phone {$vc(20)}, is_active $bool NOT NULL DEFAULT 1, created_at $ts)",
+        "CREATE TABLE IF NOT EXISTS checkins (id $ai, student_phone {$vc(20)}, student_name $txt, class_level {$vc(20)}, pin {$vc(10)}, status {$vc(20)} DEFAULT 'pending', created_at $ts)",
+        "CREATE TABLE IF NOT EXISTS announcements (id $ai, teacher_phone {$vc(20)}, message $txt, created_at $ts)",
+        // Login rate-limit: 5 failed attempts per phone in 15 minutes (DB-backed, survives restart).
+        "CREATE TABLE IF NOT EXISTS login_attempts (id $ai, phone {$vc(20)}, attempted_at $ts)",
+    ];
+    foreach ($tables as $sql) $pdo->exec($sql);
+
+    // Light migrations for databases created by an earlier version.
+    $cols = ['users' => ['active', 'is_super_admin'], 'courses' => ['active'], 'testimonials' => ['status']];
+    foreach ($cols as $table => $names) {
+        $existing = [];
+        if ($mysql) {
+            foreach ($pdo->query("SHOW COLUMNS FROM `$table`") as $r) $existing[] = $r['Field'];
+        } else {
+            foreach ($pdo->query("PRAGMA table_info($table)") as $r) $existing[] = $r['name'];
+        }
+        foreach ($names as $name) {
+            if (!in_array($name, $existing, true)) {
+                $def = $name === 'status' ? "TEXT DEFAULT 'approved'" : ($mysql ? 'TINYINT(1) NOT NULL DEFAULT 1' : 'INTEGER NOT NULL DEFAULT 1');
+                if ($name === 'is_super_admin') $def = $mysql ? 'TINYINT(1) NOT NULL DEFAULT 0' : 'INTEGER NOT NULL DEFAULT 0';
+                $pdo->exec("ALTER TABLE `$table` ADD COLUMN `$name` $def");
+            }
+        }
+    }
+
+    // Seed courses once.
+    $count = (int)$pdo->query('SELECT COUNT(*) FROM courses')->fetchColumn();
+    if ($count === 0) {
+        $st = $pdo->prepare('INSERT INTO courses (title, class_level, paper, price_bdt, lessons, description) VALUES (?,?,?,?,?,?)');
+        foreach (seed_courses() as $c) $st->execute($c);
+    }
+    // Backfill: the earliest teacher is the Super Admin.
+    $first = $pdo->query("SELECT id FROM users WHERE role='teacher' ORDER BY id LIMIT 1")->fetch();
+    if ($first) $pdo->exec('UPDATE users SET is_super_admin=1 WHERE id=' . (int)$first['id']);
+}

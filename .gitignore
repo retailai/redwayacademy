@@ -1,8 +1,5 @@
-__pycache__/
-*.pyc
-instance/
-*.db
-*.sqlite3
 .env
-.venv/
-venv/
+storage/*.db
+storage/*.log
+uploads/*
+!uploads/.htaccess

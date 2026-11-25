@@ -1,0 +1,11 @@
+# Redway Academy — project root .htaccess (Hostinger shared hosting).
+# The web root is public/ ; this file forwards all requests there.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^$ public/ [L]
+  RewriteRule (.*) public/$1 [L]
+</IfModule>
+# Never serve the .env file or the SQLite database.
+<FilesMatch "^\.env$|\.db$">
+  Require all denied
+</FilesMatch>

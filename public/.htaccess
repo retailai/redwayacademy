@@ -1,0 +1,10 @@
+# Redway Academy — public/ is the web root on Hostinger.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # Serve real files (CSS, JS) directly; everything else goes to the front controller.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.php [QSA,L]
+</IfModule>
+# Uploads live outside public/ on Hostinger; if uploads/ is ever placed
+# under the web root, this (in uploads/.htaccess) blocks script execution.
