@@ -8,6 +8,13 @@
     <span class="field-hint" id="phone-hint">Your 11-digit phone number.</span>
     <label for="password">Password</label>
     <input id="password" name="password" type="password" autocomplete="current-password" required>
+    <label for="role">Log in as — কী হিসেবে লগইন করছেন</label>
+    <select id="role" name="role" required>
+      <option value="student">Student</option>
+      <option value="parent">Parent</option>
+      <option value="teacher">Teacher / Admin</option>
+    </select>
+    <span class="field-hint">Choose the role you registered with.</span>
     <div class="form-actions"><button class="btn" type="submit">Login</button></div>
   </form>
   <p>No account yet? <a href="/register">Register</a></p>

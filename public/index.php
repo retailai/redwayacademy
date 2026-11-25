@@ -186,6 +186,16 @@ if ($path === '/login') {
                 flash('This account has been deactivated. Please contact Redway Academy.');
                 render('login', ['title' => 'Login — Redway Academy']); exit;
             }
+            $selected_role = post('role');
+            if (!in_array($selected_role, ['student', 'parent', 'teacher'], true)) {
+                flash('Please select your role (Student, Parent or Teacher / Admin) to log in. / লগইন করতে আপনার রোল (Student, Parent বা Teacher / Admin) বেছে নিন।');
+                redirect('/login');
+            }
+            if ($selected_role !== $u['role']) {
+                $label = role_label($u['role']);
+                flash("You registered as a $label. Please select $label to log in. / আপনি $label হিসেবে রেজিস্টার করেছেন। লগইন করতে $label বেছে নিন।");
+                redirect('/login');
+            }
             session_regenerate_id(true);
             $_SESSION['user_id'] = (int)$u['id'];
             flash('Welcome back, ' . $u['name'] . '!');
@@ -201,8 +211,9 @@ if ($path === '/logout' && $method === 'GET') {
 }
 
 // --- Dashboard / progress / feedback / notifications ------------------------
-if ($path === '/dashboard' && $method === 'GET') {
-    $u = login_required();
+// --- Role dashboards: each role has its own page ---------------------------
+// /dashboard is only an entry point — it sends each role to its own page.
+function build_dashboard_ctx(array $u): array {
     $ctx = ['title' => 'Dashboard — Redway Academy', 'user' => $u];
     if ($u['role'] === 'teacher') {
         $ctx += ['orders' => q('SELECT * FROM orders ORDER BY id DESC'),
@@ -227,7 +238,23 @@ if ($path === '/dashboard' && $method === 'GET') {
             'my_courses' => enrolled_courses($u['phone'])];
     }
     $ctx['notifications'] = q('SELECT * FROM notifications WHERE recipient_phone=? ORDER BY id DESC LIMIT 10', [$u['phone']]);
-    render('dashboard', $ctx);
+    return $ctx;
+}
+if ($path === '/dashboard' && $method === 'GET') {
+    $u = login_required();
+    redirect(dashboard_url($u));
+}
+if ($path === '/dashboard/teacher' && $method === 'GET') {
+    $u = role_required('teacher');
+    render('dashboard_teacher', build_dashboard_ctx($u));
+}
+if ($path === '/dashboard/student' && $method === 'GET') {
+    $u = role_required('student');
+    render('dashboard_student', build_dashboard_ctx($u));
+}
+if ($path === '/dashboard/parent' && $method === 'GET') {
+    $u = role_required('parent');
+    render('dashboard_parent', build_dashboard_ctx($u));
 }
 if ($path === '/progress') {
     $u = login_required();

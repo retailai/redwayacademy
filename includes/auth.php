@@ -33,6 +33,24 @@ function teacher_required(): array {
     if (!$u || $u['role'] !== 'teacher') { flash('Teacher login required.'); redirect('/login'); }
     return $u;
 }
+/** Role display names, shared by login / register / dashboard. */
+function role_label(string $role): string {
+    return ['student' => 'Student', 'parent' => 'Parent', 'teacher' => 'Teacher / Admin'][$role] ?? $role;
+}
+/** Each role's own dashboard page. */
+function dashboard_url(array $u): string {
+    return $u['role'] === 'teacher' ? '/dashboard/teacher'
+        : ($u['role'] === 'parent' ? '/dashboard/parent' : '/dashboard/student');
+}
+/** Require a specific role; anyone else is sent to their own dashboard. */
+function role_required(string $role): array {
+    $u = login_required();
+    if ($u['role'] !== $role) {
+        flash('This page is for ' . role_label($role) . ' accounts. You are logged in as ' . role_label($u['role']) . ' — this is your dashboard instead.');
+        redirect(dashboard_url($u));
+    }
+    return $u;
+}
 function admin_required(): array {
     $u = current_user();
     if (!$u || $u['role'] !== 'teacher') { flash('Admin Panel needs a teacher / admin login.'); redirect('/login'); }
