@@ -1,21 +1,79 @@
-<h1>Courses — NCTB English, Class 6 to 12</h1>
-<p class="section-lead">Showing: <strong><?= e($paper) ?></strong></p>
-<div class="class-pills" aria-label="Filter courses by paper">
-  <a class="pill<?= $paper === 'All' ? ' active' : '' ?>" href="/courses"<?php if ($paper === 'All'): ?> aria-current="true"<?php endif; ?>>All</a>
-  <a class="pill<?= $paper === '1st Paper' ? ' active' : '' ?>" href="/courses?paper=1st+Paper"<?php if ($paper === '1st Paper'): ?> aria-current="true"<?php endif; ?>>1st Paper</a>
-  <a class="pill<?= $paper === '2nd Paper' ? ' active' : '' ?>" href="/courses?paper=2nd+Paper"<?php if ($paper === '2nd Paper'): ?> aria-current="true"<?php endif; ?>>2nd Paper</a>
-  <a class="pill<?= $paper === 'Spoken English' ? ' active' : '' ?>" href="/courses?paper=Spoken+English"<?php if ($paper === 'Spoken English'): ?> aria-current="true"<?php endif; ?>>Spoken English</a>
-</div>
-<div class="grid">
-<?php foreach ($courses as $c): ?>
-  <article class="card course-card">
-    <div class="card-top"><span class="unit"><?= e($c['paper']) ?></span></div>
-    <h3><?= e($c['title']) ?></h3>
-    <p><?= e($c['description']) ?></p>
-    <div class="tags"><span class="tag">Class <?= e($c['class_level']) ?></span><span class="tag"><?= (int)$c['lessons'] ?> lessons</span><span class="tag">bKash / Nagad</span></div>
-    <p><span class="price">৳<?= (int)$c['price_bdt'] ?></span></p>
-    <div class="card-actions"><a class="btn btn-primary" href="/course/<?= (int)$c['id'] ?>">Details</a><a class="btn btn-secondary" href="/buy/<?= (int)$c['id'] ?>">Buy</a></div>
-  </article>
-<?php endforeach; ?>
-<?php if (empty($courses)): ?><p>No courses in this group yet.</p><?php endif; ?>
+<?php
+// Course listing: $courses (page), $paper, $q, $min_price, $max_price, $price_band,
+// $page, $pages, $total. Filter links preserve the other filters via $filter_url().
+?>
+<nav class="crumb" aria-label="Breadcrumb"><a href="/"><?= t('crumb_home') ?></a> / <?= t('crumb_courses') ?></nav>
+<h1 class="page-title"><?= t('courses_title') ?></h1>
+<p class="section-lead"><?= t('courses_sub') ?></p>
+<p class="section-lead"><?= t('showing') ?>: <strong><?= e($paper) ?></strong><?php if (!empty($q)): ?> • “<?= e($q) ?>”<?php endif; ?> • <?= num((int)$total) ?> <?= t('stat_courses') ?></p>
+
+<section aria-labelledby="how-heading" style="margin-top:20px">
+  <h2 id="how-heading" style="margin-top:0"><?= t('how_title') ?></h2>
+  <p><?= t('how_sub') ?></p>
+  <div class="how-row">
+    <div class="how-step"><b>1</b><div><h3><?= t('how1_t') ?></h3><p><?= t('how1_d') ?></p></div></div>
+    <div class="how-step"><b>2</b><div><h3><?= t('how2_t') ?></h3><p><?= t('how2_d') ?></p></div></div>
+    <div class="how-step"><b>3</b><div><h3><?= t('how3_t') ?></h3><p><?= t('how3_d') ?></p></div></div>
+  </div>
+</section>
+
+<div class="courses-layout">
+  <aside class="filter-card" aria-label="<?= e(t('filter_title')) ?>">
+    <h3><?= t('filter_title') ?></h3>
+    <form method="get" action="/courses">
+      <div class="filter-group">
+        <label><?= t('filter_paper') ?></label>
+        <div class="class-pills" style="margin-top:0">
+          <a class="pill<?= $paper === 'All' ? ' active' : '' ?>" href="<?= e($filter_url(['paper' => 'All', 'page' => 1])) ?>"><?= t('filter_all') ?></a>
+          <?php foreach (['1st Paper', '2nd Paper', 'Spoken English'] as $p): ?>
+          <a class="pill<?= $paper === $p ? ' active' : '' ?>" href="<?= e($filter_url(['paper' => $p, 'page' => 1])) ?>"><?= e($p) ?></a>
+          <?php endforeach; ?>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label><?= t('filter_price') ?></label>
+        <div class="price-pills">
+          <a href="<?= e($filter_url(['band' => 'all', 'page' => 1])) ?>"<?= $price_band === 'all' ? ' class="active"' : '' ?>><?= t('price_all') ?></a>
+          <a href="<?= e($filter_url(['band' => 'under', 'page' => 1])) ?>"<?= $price_band === 'under' ? ' class="active"' : '' ?>><?= t('price_under') ?></a>
+          <a href="<?= e($filter_url(['band' => 'mid', 'page' => 1])) ?>"<?= $price_band === 'mid' ? ' class="active"' : '' ?>><?= t('price_mid') ?></a>
+          <a href="<?= e($filter_url(['band' => 'over', 'page' => 1])) ?>"<?= $price_band === 'over' ? ' class="active"' : '' ?>><?= t('price_over') ?></a>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label for="min_price"><?= t('filter_min') ?></label>
+        <input id="min_price" name="min_price" type="number" min="0" inputmode="numeric" value="<?= $min_price !== '' ? (int)$min_price : '' ?>">
+      </div>
+      <div class="filter-group">
+        <label for="max_price"><?= t('filter_max') ?></label>
+        <input id="max_price" name="max_price" type="number" min="0" inputmode="numeric" value="<?= $max_price !== '' ? (int)$max_price : '' ?>">
+      </div>
+      <input type="hidden" name="paper" value="<?= e($paper) ?>">
+      <input type="hidden" name="band" value="<?= e($price_band) ?>">
+      <?php if (!empty($q)): ?><input type="hidden" name="q" value="<?= e($q) ?>"><?php endif; ?>
+      <div class="form-actions" style="display:flex;gap:8px">
+        <button class="btn btn-primary" type="submit" style="flex:1"><?= t('filter_apply') ?></button>
+        <a class="btn btn-secondary" href="/courses"><?= t('filter_clear') ?></a>
+      </div>
+    </form>
+  </aside>
+
+  <div>
+    <div class="grid">
+      <?php foreach ($courses as $c): ?>
+      <?php include __DIR__ . '/partials/course_card.php'; ?>
+      <?php endforeach; ?>
+    </div>
+    <?php if (empty($courses)): ?><p><?= t('no_courses') ?></p><?php endif; ?>
+
+    <?php if ($pages > 1): ?>
+    <nav class="pager" aria-label="<?= e(t('page')) ?>">
+      <?php if ($page > 1): ?><a href="<?= e($filter_url(['page' => $page - 1])) ?>">← <?= t('prev') ?></a><?php endif; ?>
+      <?php for ($i = 1; $i <= $pages; $i++): ?>
+        <?php if ($i === $page): ?><span class="current" aria-current="page"><?= num($i) ?></span>
+        <?php else: ?><a href="<?= e($filter_url(['page' => $i])) ?>"><?= num($i) ?></a><?php endif; ?>
+      <?php endfor; ?>
+      <?php if ($page < $pages): ?><a href="<?= e($filter_url(['page' => $page + 1])) ?>"><?= t('next') ?> →</a><?php endif; ?>
+    </nav>
+    <?php endif; ?>
+  </div>
 </div>

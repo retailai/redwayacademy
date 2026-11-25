@@ -1,22 +1,25 @@
 <div class="auth-card">
-  <h1>Login</h1>
-  <p>Log in with your phone number — student, parent, or teacher.</p>
+  <h1><?= t('login_title') ?></h1>
+  <p><?= t('login_sub') ?></p>
+  <?php if (!empty($subdomain_role)): ?>
+  <p><span class="badge red"><?= e(subdomain_role_label($subdomain_role)) ?></span></p>
+  <?php endif; ?>
   <form method="post" action="/login">
     <input type="hidden" name="csrf_token" value="<?= e($csrf_token) ?>">
-    <label for="phone">Phone number</label>
+    <label for="phone"><?= t('phone') ?></label>
     <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required placeholder="01XXXXXXXXX">
-    <span class="field-hint" id="phone-hint">Your 11-digit phone number.</span>
-    <label for="password">Password</label>
+    <span class="field-hint" id="phone-hint"><?= t('phone_hint') ?></span>
+    <label for="password"><?= t('password') ?></label>
     <input id="password" name="password" type="password" autocomplete="current-password" required>
-    <label for="role">Log in as — কী হিসেবে লগইন করছেন</label>
+    <label for="role"><?= t('login_as') ?></label>
     <select id="role" name="role" required>
-      <option value="student">Student</option>
-      <option value="parent">Parent</option>
-      <option value="teacher">Teacher / Admin</option>
+      <option value="student"<?= ($subdomain_role ?? null) === 'student' ? ' selected' : '' ?>><?= t('role_student') ?></option>
+      <option value="parent"<?= ($subdomain_role ?? null) === 'parent' ? ' selected' : '' ?>><?= t('role_parent') ?></option>
+      <option value="teacher"<?= ($subdomain_role ?? null) === 'teacher' ? ' selected' : '' ?>><?= t('role_teacher') ?></option>
     </select>
-    <span class="field-hint">Choose the role you registered with.</span>
-    <div class="form-actions"><button class="btn" type="submit">Login</button></div>
+    <span class="field-hint"><?= t('login_as_hint') ?></span>
+    <div class="form-actions"><button class="btn" type="submit"><?= t('login_btn') ?></button></div>
   </form>
-  <p>No account yet? <a href="/register">Register</a></p>
-  <p><small>Too many wrong attempts locks login for 15 minutes (5 attempts).</small></p>
+  <p><?= t('no_account') ?> <a href="/register"><?= t('nav_register') ?></a></p>
+  <p><small><?= t('lock_note') ?></small></p>
 </div>

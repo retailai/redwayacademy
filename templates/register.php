@@ -1,26 +1,31 @@
 <div class="auth-card">
-  <h1>Register</h1>
-  <p>Register with your phone number. Students and parents can self-register. The first teacher becomes Super Admin; after that, only an admin can add teachers.</p>
+  <h1><?= t('register_title') ?></h1>
+  <p><?= t('register_sub') ?></p>
   <form method="post" action="/register">
     <input type="hidden" name="csrf_token" value="<?= e($csrf_token) ?>">
-    <label for="name">Full name</label>
+    <label for="name"><?= t('full_name') ?></label>
     <input id="name" name="name" autocomplete="name" required>
-    <label for="phone">Phone number</label>
+    <label for="phone"><?= t('phone') ?></label>
     <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required placeholder="01XXXXXXXXX (11 digits)">
-    <span class="field-hint">11 digits, starting with 01.</span>
-    <label for="password">Password (4+ characters)</label>
+    <span class="field-hint"><?= t('password_hint') ?></span>
+    <label for="password"><?= t('password_4') ?></label>
     <input id="password" name="password" type="password" autocomplete="new-password" required minlength="4">
-    <label for="role">Role</label>
-    <select id="role" name="role">
-      <option value="student">Student</option>
-      <option value="parent">Parent</option>
-      <option value="teacher">Teacher / Admin</option>
-    </select>
-    <label for="class_level">Class level (students)</label>
-    <input id="class_level" name="class_level" placeholder="e.g. 9-10">
-    <label for="linked_student_phone">Linked student phone (parents only)</label>
-    <input id="linked_student_phone" name="linked_student_phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="Your child's phone number">
-    <div class="form-actions"><button class="btn" type="submit">Register</button></div>
+    <?php if (!empty($subdomain_role)): ?>
+      <input type="hidden" name="role" value="<?= e($subdomain_role) ?>">
+      <p><span class="badge"><?= e(subdomain_role_label($subdomain_role)) ?></span></p>
+    <?php else: ?>
+      <label for="role"><?= t('role') ?></label>
+      <select id="role" name="role">
+        <option value="student"><?= t('role_student') ?></option>
+        <option value="parent"><?= t('role_parent') ?></option>
+        <option value="teacher"><?= t('role_teacher') ?></option>
+      </select>
+    <?php endif; ?>
+    <label for="class_level"><?= t('class_level') ?></label>
+    <input id="class_level" name="class_level" placeholder="<?= e(t('class_level_ph')) ?>">
+    <label for="linked_student_phone"><?= t('linked_phone') ?></label>
+    <input id="linked_student_phone" name="linked_student_phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="<?= e(t('linked_phone_ph')) ?>">
+    <div class="form-actions"><button class="btn" type="submit"><?= t('register_btn') ?></button></div>
   </form>
-  <p>Already registered? <a href="/login">Login</a></p>
+  <p><?= t('have_account') ?> <a href="/login"><?= t('nav_login') ?></a></p>
 </div>

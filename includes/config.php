@@ -58,9 +58,13 @@ if (APP_ENV === 'production') ini_set('session.cookie_secure', '1');
 if (SECRET_KEY !== '' && SECRET_KEY !== 'redway-dev-secret-change-me') {
     session_name('REDWAYSESSID');
 }
+// One login across the main domain and the role subdomains
+// (student./parent./admin.redwayacademy.com share the session cookie).
+$__host = strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '', 2)[0]);
+$__cookie_domain = str_ends_with($__host, '.redwayacademy.com') ? '.redwayacademy.com' : '';
 session_set_cookie_params([
-    'lifetime' => SESSION_LIFETIME, 'path' => '/', 'httponly' => true,
-    'samesite' => 'Lax', 'secure' => APP_ENV === 'production',
+    'lifetime' => SESSION_LIFETIME, 'path' => '/', 'domain' => $__cookie_domain,
+    'httponly' => true, 'samesite' => 'Lax', 'secure' => APP_ENV === 'production',
 ]);
 
 // Brand.

@@ -11,6 +11,7 @@ require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
+require_once __DIR__ . '/../includes/i18n.php';
 
 start_session();
 
@@ -45,6 +46,21 @@ function run(string $sql, array $params = []): PDOStatement {
     $st = db()->prepare($sql); $st->execute($params); return $st;
 }
 function post(string $k, string $d = ''): string { return trim($_POST[$k] ?? $d); }
+
+// --- Role subdomains --------------------------------------------------------
+// student./parent./admin.redwayacademy.com each serve only that role's login
+// + dashboard. Public marketing pages on a subdomain go to the dashboard
+// (login if logged out); /admin on a non-teacher subdomain does the same.
+// The language choice (?lang=) is honoured before any redirect.
+$sub_role = site_host_role();
+if ($sub_role !== null) {
+    $is_public_page = $path === '/' || $path === '/courses' || str_starts_with($path, '/course/')
+        || $path === '/testimonials' || $path === '/retake' || str_starts_with($path, '/retake/');
+    $is_admin_page = str_starts_with($path, '/admin');
+    if ($is_public_page || ($is_admin_page && $sub_role !== 'teacher')) {
+        redirect('/dashboard');
+    }
+}
 
 // --- /health, /robots.txt, /sitemap.xml --------------------------------------
 if ($path === '/health') {
@@ -92,16 +108,53 @@ if (str_starts_with($path, '/uploads/')) {
 
 // --- Public pages -----------------------------------------------------------
 if ($path === '/' && $method === 'GET') {
+    $me = current_user();
+    $resume = null;
+    if ($me && $me['role'] === 'student') {
+        $enrolled = enrolled_courses($me['phone']);
+        $resume = $enrolled[0] ?? null;
+    }
     render('home', ['title' => 'Redway Academy — Mistakes Mark the Way',
         'courses' => q('SELECT * FROM courses WHERE active=1 ORDER BY id'),
-        'testimonials' => q("SELECT * FROM testimonials WHERE status='approved' ORDER BY id DESC LIMIT 6")]);
+        'testimonials' => q("SELECT * FROM testimonials WHERE status='approved' ORDER BY id DESC LIMIT 6"),
+        'resume_course' => $resume]);
 }
 if ($path === '/courses' && $method === 'GET') {
     $paper = $_GET['paper'] ?? 'All';
-    $rows = in_array($paper, ['1st Paper', '2nd Paper', 'Spoken English'], true)
-        ? q('SELECT * FROM courses WHERE paper=? AND active=1 ORDER BY id', [$paper])
-        : q('SELECT * FROM courses WHERE active=1 ORDER BY id');
-    render('courses', ['title' => 'Courses — Redway Academy', 'courses' => $rows, 'paper' => $paper]);
+    $qtext = trim($_GET['q'] ?? '');
+    $band = in_array($_GET['band'] ?? 'all', ['all', 'under', 'mid', 'over'], true) ? ($_GET['band'] ?? 'all') : 'all';
+    $min_price = $_GET['min_price'] ?? '';
+    $max_price = $_GET['max_price'] ?? '';
+    $page = max(1, (int)($_GET['page'] ?? 1));
+    $per_page = 6;
+    $conds = ['active=1']; $params = [];
+    if (in_array($paper, ['1st Paper', '2nd Paper', 'Spoken English'], true)) { $conds[] = 'paper=?'; $params[] = $paper; }
+    if ($qtext !== '') { $conds[] = '(title LIKE ? OR description LIKE ?)'; $params[] = '%' . $qtext . '%'; $params[] = '%' . $qtext . '%'; }
+    if ($band === 'under') $conds[] = 'price_bdt<800';
+    elseif ($band === 'mid') $conds[] = 'price_bdt BETWEEN 800 AND 1000';
+    elseif ($band === 'over') $conds[] = 'price_bdt>1000';
+    if ($min_price !== '' && is_numeric($min_price)) { $conds[] = 'price_bdt>=?'; $params[] = (int)$min_price; }
+    if ($max_price !== '' && is_numeric($max_price)) { $conds[] = 'price_bdt<=?'; $params[] = (int)$max_price; }
+    $where = implode(' AND ', $conds);
+    $st = db()->prepare("SELECT COUNT(*) FROM courses WHERE $where");
+    $st->execute($params);
+    $total = (int)$st->fetchColumn();
+    $pages = max(1, (int)ceil($total / $per_page));
+    $page = min($page, $pages);
+    $st = db()->prepare("SELECT * FROM courses WHERE $where ORDER BY id LIMIT $per_page OFFSET " . (($page - 1) * $per_page));
+    $st->execute($params);
+    $rows = $st->fetchAll();
+    $filter_url = function (array $over) use ($paper, $qtext, $band, $min_price, $max_price): string {
+        $f = ['paper' => $paper, 'band' => $band];
+        if ($qtext !== '') $f['q'] = $qtext;
+        if ($min_price !== '') $f['min_price'] = $min_price;
+        if ($max_price !== '') $f['max_price'] = $max_price;
+        foreach ($over as $k => $v) $f[$k] = $v;
+        return '/courses?' . http_build_query($f);
+    };
+    render('courses', ['title' => 'Courses — Redway Academy', 'courses' => $rows, 'paper' => $paper,
+        'q' => $qtext, 'price_band' => $band, 'min_price' => $min_price, 'max_price' => $max_price,
+        'page' => $page, 'pages' => $pages, 'total' => $total, 'filter_url' => $filter_url]);
 }
 if (preg_match('#^/course/(\d+)$#', $path, $m) && $method === 'GET') {
     $c = q1('SELECT * FROM courses WHERE id=?', [(int)$m[1]]);
@@ -127,7 +180,8 @@ if (preg_match('#^/course/(\d+)/lesson/(\d+)$#', $path, $m) && $method === 'GET'
     }
     $total = (int)q1('SELECT COUNT(*) AS n FROM lessons WHERE course_id=?', [(int)$c['id']])['n'];
     render('lesson', ['title' => $lesson['title'] . ' — ' . $c['title'],
-        'course' => $c, 'lesson' => $lesson, 'total' => $total]);
+        'course' => $c, 'lesson' => $lesson, 'total' => $total,
+        'all_lessons' => q('SELECT lesson_no, title FROM lessons WHERE course_id=? ORDER BY lesson_no', [(int)$c['id']])]);
 }
 if ($path === '/testimonials') {
     if ($method === 'POST') {
@@ -136,7 +190,7 @@ if ($path === '/testimonials') {
         foreach (q("SELECT phone FROM users WHERE role='teacher'") as $t) {
             notify($t['phone'], "New endorsement to review from " . post('author_name') . " (" . post('role', 'Student') . ").", 'testimonial');
         }
-        flash('Thank you! Your endorsement was sent for admin approval and will be published after review.');
+        flash(t('review_sent'));
         redirect('/testimonials');
     }
     render('testimonials', ['title' => 'Reviews — Redway Academy',
@@ -147,15 +201,16 @@ if ($path === '/testimonials') {
 if ($path === '/register') {
     if ($method === 'POST') {
         $name = post('name'); $phone = digits_only(post('phone')); $password = $_POST['password'] ?? '';
-        $role = in_array(post('role'), ['student', 'parent', 'teacher'], true) ? post('role') : 'student';
+        // On a role subdomain, registration is for that role only.
+        $role = $sub_role ?? (in_array(post('role'), ['student', 'parent', 'teacher'], true) ? post('role') : 'student');
         $class_level = post('class_level'); $linked = digits_only(post('linked_student_phone'));
         if ($name === '' || strlen($phone) < 11 || strlen($password) < 4) {
-            flash('Please give your name, a valid phone number (11 digits) and a password of 4+ characters.');
+            flash(t('fill_all'));
             redirect('/register');
         }
         if ($role === 'teacher') {
             $existing = (int)db()->query("SELECT COUNT(*) FROM users WHERE role='teacher'")->fetchColumn();
-            if ($existing > 0) { flash('Teacher accounts are added by an admin. Please ask a teacher / admin to add you.'); redirect('/login'); }
+            if ($existing > 0) { flash(t('teacher_add_only')); redirect('/login'); }
         }
         $is_first_teacher = $role === 'teacher' && (int)db()->query("SELECT COUNT(*) FROM users WHERE role='teacher'")->fetchColumn() === 0;
         try {
@@ -164,11 +219,11 @@ if ($path === '/register') {
             $_SESSION['user_id'] = (int)db()->lastInsertId();
         } catch (PDOException $e) {
             if (str_contains($e->getMessage(), 'Duplicate') || $e->getCode() === '23000') {
-                flash('This phone number is already registered. Please log in.'); redirect('/login');
+                flash(t('phone_registered')); redirect('/login');
             }
             throw $e;
         }
-        flash("Welcome, $name! You are logged in as $role.");
+        flash(sprintf(t('welcome'), $name, t('role_' . $role)));
         redirect('/dashboard');
     }
     render('register', ['title' => 'Register — Redway Academy']);
@@ -177,32 +232,37 @@ if ($path === '/login') {
     if ($method === 'POST') {
         $phone = digits_only(post('phone')); $password = $_POST['password'] ?? '';
         if (login_blocked($phone)) {
-            flash('Too many wrong attempts. Please wait 15 minutes and try again.');
+            flash(t('login_locked'));
             render('login', ['title' => 'Login — Redway Academy']); exit;
         }
         $u = q1('SELECT * FROM users WHERE phone=?', [$phone]);
         if ($u && password_verify($password, $u['password_hash'])) {
             if ((int)($u['active'] ?? 1) === 0) {
-                flash('This account has been deactivated. Please contact Redway Academy.');
+                flash(t('account_deactivated'));
                 render('login', ['title' => 'Login — Redway Academy']); exit;
+            }
+            // A role subdomain only accepts that role's accounts.
+            if ($sub_role !== null && $u['role'] !== $sub_role) {
+                flash(sprintf(t('subdomain_role'), subdomain_role_label($sub_role)));
+                redirect('/login');
             }
             $selected_role = post('role');
             if (!in_array($selected_role, ['student', 'parent', 'teacher'], true)) {
-                flash('Please select your role (Student, Parent or Teacher / Admin) to log in. / লগইন করতে আপনার রোল (Student, Parent বা Teacher / Admin) বেছে নিন।');
+                flash(t('select_role'));
                 redirect('/login');
             }
             if ($selected_role !== $u['role']) {
-                $label = role_label($u['role']);
-                flash("You registered as a $label. Please select $label to log in. / আপনি $label হিসেবে রেজিস্টার করেছেন। লগইন করতে $label বেছে নিন।");
+                $label = t('role_' . $u['role']);
+                flash(sprintf(t('role_mismatch'), $label, $label));
                 redirect('/login');
             }
             session_regenerate_id(true);
             $_SESSION['user_id'] = (int)$u['id'];
-            flash('Welcome back, ' . $u['name'] . '!');
+            flash(sprintf(t('welcome_back'), $u['name']));
             redirect('/dashboard');
         }
         record_failed_login($phone);
-        flash('Wrong phone number or password.');
+        flash(t('wrong_login'));
     }
     render('login', ['title' => 'Login — Redway Academy']);
 }
@@ -264,7 +324,7 @@ if ($path === '/progress') {
             [$s_phone, $s_name, $score, post('suggestion'), $u['phone'], now_str()]);
         notify($s_phone, "New progress update from your teacher: score $score.", 'progress');
         notify_parents_of($s_phone, "New progress update for $s_name: score $score.", 'progress');
-        flash('Progress note added and the student / parent were notified.');
+        flash(t('progress_added'));
         redirect('/dashboard');
     }
     $phone = ($u['role'] === 'parent' && $u['linked_student_phone']) ? $u['linked_student_phone'] : $u['phone'];
@@ -279,7 +339,7 @@ if ($path === '/feedback') {
         foreach (q("SELECT phone FROM users WHERE role='teacher'") as $t) {
             notify($t['phone'], "New feedback from {$u['name']} ({$u['role']}).", 'feedback');
         }
-        flash('Thank you for your feedback!');
+        flash(t('feedback_sent'));
         redirect('/dashboard');
     }
     render('feedback', ['title' => 'Feedback — Redway Academy', 'feedback' => q('SELECT * FROM feedback ORDER BY id DESC LIMIT 20')]);
@@ -310,7 +370,7 @@ if ($path === '/homework') {
         foreach (q("SELECT phone FROM users WHERE role='student'") as $s) {
             notify($s['phone'], 'New homework: ' . post('title') . '.', 'homework');
         }
-        flash('Homework created and students were notified.');
+        flash(t('homework_created'));
         redirect('/homework');
     }
     render('homework', ['title' => 'Homework — Redway Academy', 'homework' => q('SELECT * FROM homework ORDER BY id DESC')]);
@@ -322,7 +382,7 @@ if (preg_match('#^/homework/(\d+)/submit$#', $path, $m) && $method === 'POST') {
     foreach (q("SELECT phone FROM users WHERE role='teacher'") as $t) {
         notify($t['phone'], "Homework submitted by {$u['name']}.", 'homework');
     }
-    flash('Homework submitted. Thank you!');
+    flash(t('homework_sent'));
     redirect('/homework');
 }
 if (preg_match('#^/homework/submission/(\d+)/review$#', $path, $m) && $method === 'POST') {
@@ -345,16 +405,16 @@ if (preg_match('#^/buy/(\d+)$#', $path, $m)) {
     if (!$course) abort_page(404, 'Sorry — that course does not exist.');
     if ($method === 'POST') {
         $trxid = strtoupper(post('trxid'));
-        if ($trxid === '') { flash('Please enter your bKash / Nagad Transaction ID.'); redirect('/buy/' . $course['id']); }
+        if ($trxid === '') { flash(t('need_trxid')); redirect('/buy/' . $course['id']); }
         $sender_phone = digits_only(post('sender_phone'));
-        if (!preg_match('/^01\d{9}$/', $sender_phone)) { flash('Please enter the sender mobile number (11 digits starting with 01) — the bKash / Nagad number you sent the money from.'); redirect('/buy/' . $course['id']); }
+        if (!preg_match('/^01\d{9}$/', $sender_phone)) { flash(t('need_sender')); redirect('/buy/' . $course['id']); }
         $method_pay = post('method', 'bKash');
         run('INSERT INTO orders (course_id, course_title, student_phone, student_name, method, trxid, sender_phone, amount_bdt, created_at) VALUES (?,?,?,?,?,?,?,?,?)',
             [$course['id'], $course['title'], $u['phone'], $u['name'], $method_pay, $trxid, $sender_phone, $course['price_bdt'], now_str()]);
         foreach (q("SELECT phone FROM users WHERE role='teacher'") as $t) {
             notify($t['phone'], "New $method_pay payment to verify: {$course['title']}, TrxID $trxid, sender $sender_phone, ৳{$course['price_bdt']}.", 'payment');
         }
-        flash('Order submitted! A teacher will verify your payment soon.');
+        flash(t('order_sent'));
         redirect('/dashboard');
     }
     render('buy', ['title' => 'Buy — ' . $course['title'], 'course' => $course]);
@@ -399,7 +459,7 @@ if ($path === '/retake') {
         foreach (q("SELECT phone FROM users WHERE role='teacher'") as $t) {
             notify($t['phone'], "New retake registration: {$form['student_name']} ({$form['exam']} {$form['exam_year']}) — $status.", 'retake');
         }
-        flash('Registration submitted — status: ' . str_replace('_', ' ', $status) . ". $reasons");
+        flash(sprintf(t('retake_sent'), str_replace('_', ' ', $status), $reasons));
         redirect('/retake/' . $id);
     }
     render('retake', ['title' => 'Free Retake Registration — Redway Academy']);
@@ -426,16 +486,16 @@ if ($path === '/checkin') {
         $pin = (string)random_int(1000, 9999);
         run('INSERT INTO checkin_codes (pin, class_level, teacher_phone, created_at) VALUES (?,?,?,?)',
             [$pin, post('class_level'), $u['phone'], now_str()]);
-        flash("Check-in PIN created: $pin. Share it in class — students enter it, you confirm, parents are notified.");
+        flash(sprintf(t('pin_created'), $pin));
         redirect('/checkin');
     }
     if ($method === 'POST') {
         $pin = post('pin');
         $code = q1('SELECT * FROM checkin_codes WHERE pin=? AND is_active=1', [$pin]);
-        if (!$code) { flash('Wrong or expired PIN. Ask your teacher for the class PIN.'); redirect('/checkin'); }
+        if (!$code) { flash(t('pin_wrong')); redirect('/checkin'); }
         run('INSERT INTO checkins (student_phone, student_name, class_level, pin, created_at) VALUES (?,?,?,?,?)',
             [$u['phone'], $u['name'], $code['class_level'], $pin, now_str()]);
-        flash('Check-in requested. Your teacher will confirm your arrival.');
+        flash(t('checkin_requested'));
         redirect('/checkin');
     }
     render('checkin', ['title' => 'Check-in — Redway Academy',
@@ -452,7 +512,7 @@ if (preg_match('#^/checkin/(\d+)/confirm$#', $path, $m) && $method === 'POST') {
         notify_parents_of($row['student_phone'], $msg, 'arrival');
         notify($row['student_phone'], $msg, 'arrival');
     }
-    flash('Arrival confirmed and the parent was notified.');
+    flash(t('arrival_confirmed'));
     redirect('/checkin');
 }
 

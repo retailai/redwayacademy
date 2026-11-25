@@ -5,6 +5,7 @@
  * Passwords: password_hash / password_verify. First teacher = Super Admin.
  */
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/i18n.php';
 
 function start_session(): void {
     if (session_status() !== PHP_SESSION_ACTIVE) session_start();
@@ -25,7 +26,7 @@ function is_super_admin(?array $u): bool { return $u !== null && ($u['role'] ?? 
 
 function login_required(): array {
     $u = current_user();
-    if (!$u) { flash('Please log in first.'); redirect('/login'); }
+    if (!$u) { flash(t('login_first')); redirect('/login'); }
     return $u;
 }
 function teacher_required(): array {
@@ -41,6 +42,29 @@ function role_label(string $role): string {
 function dashboard_url(array $u): string {
     return $u['role'] === 'teacher' ? '/dashboard/teacher'
         : ($u['role'] === 'parent' ? '/dashboard/parent' : '/dashboard/student');
+}
+
+/**
+ * Role subdomains: student.redwayacademy.com, parent.redwayacademy.com,
+ * admin.redwayacademy.com (admin = teacher role). Returns the role the
+ * current host serves, or null on the main domain / localhost.
+ * DNS + subdomain creation in Hostinger hPanel is a deploy-time step;
+ * this is the app-side routing that makes each subdomain role-only.
+ */
+function site_host_role(): ?string {
+    $host = strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '', 2)[0]);
+    $labels = explode('.', $host);
+    if (count($labels) < 2) return null;
+    $map = ['student' => 'student', 'parent' => 'parent', 'admin' => 'teacher'];
+    if (!isset($map[$labels[0]])) return null;
+    // Real subdomains end in redwayacademy.com; allow *.localhost for local tests.
+    $rest = implode('.', array_slice($labels, 1));
+    if ($rest === 'redwayacademy.com' || $rest === 'localhost') return $map[$labels[0]];
+    return null;
+}
+/** Bilingual label for a role, for subdomain refusal messages. */
+function subdomain_role_label(string $role): string {
+    return ['student' => 'Student / স্টুডেন্ট', 'parent' => 'Parent / অভিভাবক', 'teacher' => 'Teacher / Admin / শিক্ষক'][ $role ] ?? $role;
 }
 /** Require a specific role; anyone else is sent to their own dashboard. */
 function role_required(string $role): array {

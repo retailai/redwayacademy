@@ -39,6 +39,7 @@ function render(string $view, array $vars = []): void {
     $vars['unread_count'] = $unread;
     $vars['csrf_token'] = csrf_token();
     $vars['is_super_admin'] = $user ? is_super_admin($user) : false;
+    $vars['subdomain_role'] = function_exists('site_host_role') ? site_host_role() : null;
     extract($vars);
     $view_file = __DIR__ . '/../templates/' . $view . '.php';
     if (!is_file($view_file)) { http_response_code(500); echo 'Missing template: ' . e($view); return; }
@@ -56,6 +57,17 @@ function notify_parents_of(string $student_phone, string $message, string $kind 
     $st = db()->prepare("SELECT phone FROM users WHERE role='parent' AND linked_student_phone=?");
     $st->execute([$student_phone]);
     foreach ($st->fetchAll() as $p) notify($p['phone'], $message, $kind);
+}
+
+/** Text-only course thumbnail: gradient tile class cycled by course id. */
+function thumb_class(array $c): string {
+    $classes = ['t-blue', 't-red', 't-green', 't-yellow', 't-grey'];
+    return $classes[((int)($c['id'] ?? 1) - 1) % count($classes)];
+}
+/** First letter of the course title, for the text-only thumbnail tile. */
+function thumb_letter(array $c): string {
+    $t = trim((string)($c['title'] ?? 'R'));
+    return mb_strtoupper(mb_substr($t, 0, 1, 'UTF-8'), 'UTF-8');
 }
 
 /** Enrollment: a verified bKash/Nagad order IS the enrollment. */
