@@ -72,7 +72,7 @@ if (str_starts_with($path, '/assets/')) {
     $file = __DIR__ . $path;
     if (is_file($file)) {
         $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-        header('Content-Type: ' . ['css' => 'text/css', 'js' => 'application/javascript'][$ext] ?? 'application/octet-stream');
+        header('Content-Type: ' . ['css' => 'text/css', 'js' => 'application/javascript', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp', 'svg' => 'image/svg+xml'][$ext] ?? 'application/octet-stream');
         readfile($file); exit;
     }
     abort_page(404, 'Sorry — that page does not exist.');
