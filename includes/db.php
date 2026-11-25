@@ -116,8 +116,14 @@ function init_db(PDO $pdo): void {
     }
 
     // Backfill the track for courses created before the track column existed.
-    $pdo->exec("UPDATE courses SET track='spoken' WHERE paper='Spoken English' AND (track IS NULL OR track='')");
-    $pdo->exec("UPDATE courses SET track='academic' WHERE track IS NULL OR track=''");
+    // Derive it from `paper` unconditionally and idempotently: the ALTER
+    // adds the column with DEFAULT 'academic', so on an existing database
+    // every old row already has track='academic' (never NULL/empty) and a
+    // NULL/empty-only backfill would silently match zero rows — which is
+    // exactly how the Spoken course ended up counted as Academic live.
+    // Rows with any other paper value are left untouched.
+    $pdo->exec("UPDATE courses SET track='spoken' WHERE paper='Spoken English'");
+    $pdo->exec("UPDATE courses SET track='academic' WHERE paper IN ('1st Paper','2nd Paper')");
 
     // Seed the settings defaults (only when the key is missing — an admin's
     // saved values are never overwritten). The live monthly fee is ৳1450
