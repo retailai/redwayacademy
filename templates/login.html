@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Login</h1><p>Log in with your phone number — Teacher, Student or Parent.</p>
+<form method="post"><label>Phone number <input name="phone" required placeholder="01XXXXXXXXX"></label><label>Password <input type="password" name="password" required></label><button class="btn" type="submit">Login</button></form>
+<p>No account? <a href="{{ url_for('register') }}">Register</a></p>
+{% endblock %}

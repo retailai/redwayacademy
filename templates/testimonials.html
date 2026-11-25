@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Happy Parents &amp; Students</h1>
+<form method="post"><label>Your name <input name="author_name" required></label><label>I am a <select name="role"><option>Parent</option><option>Student</option><option>Teacher</option></select></label><label>Class <input name="class_level"></label><label>Your endorsement <textarea name="message" required></textarea></label><button class="btn" type="submit">Publish endorsement</button></form>
+{% for t in testimonials %}<div class="card"><p>"{{ t.message }}"</p><p><strong>{{ t.author_name }}</strong> — {{ t.role }}{% if t.class_level %}, Class {{ t.class_level }}{% endif %}</p></div>{% else %}<p>No endorsements yet — be the first!</p>{% endfor %}
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Retake Registration</h1>
+<p><strong>{{ reg.student_name }}</strong> — {{ reg.exam }} {{ reg.exam_year }}, Roll {{ reg.roll_no }}, Reg {{ reg.reg_no }}</p>
+<p>Status: <strong>{{ reg.status }}</strong></p>
+<p>{{ reg.reasons }}</p>
+<p><a href="{{ url_for('index') }}">Back to home</a></p>
+{% endblock %}

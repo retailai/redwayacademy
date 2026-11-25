@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Redway Academy — Mistakes Mark the Way{% endblock %}</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="{{ url_for('index') }}">
+    <span class="logo" aria-hidden="true">
+      <svg viewBox="0 0 64 64" width="44" height="44"><circle cx="32" cy="32" r="30" fill="#fff" stroke="#ddd" stroke-width="2"/><path d="M12 22 L22 44 L32 28 L42 44 L52 14" fill="none" stroke="#EA4335" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 44 L32 28" fill="none" stroke="#FBBC05" stroke-width="5" stroke-linecap="round"/><path d="M32 28 L42 44" fill="none" stroke="#34A853" stroke-width="5" stroke-linecap="round"/><path d="M42 44 L52 14" fill="none" stroke="#4285F4" stroke-width="5" stroke-linecap="round"/><path d="M46 10 L56 12 L52 22 Z" fill="#4285F4"/></svg>
+    </span>
+    <span><strong class="r">red</strong><strong class="w">way</strong> <span class="academy">ACADEMY</span><br><small>Mistakes Mark the Way</small></span>
+  </a>
+  <nav>
+    <a href="{{ url_for('index') }}">Home</a>
+    <a href="{{ url_for('courses') }}">Courses</a>
+    <a href="{{ url_for('homework') }}">Homework</a>
+    <a href="{{ url_for('retake') }}">Free Retake</a>
+    <a href="{{ url_for('testimonials') }}">Reviews</a>
+    <a href="{{ url_for('checkin') }}">Check-in</a>
+    {% if current_user %}
+      <a href="{{ url_for('notifications') }}">🔔 {% if unread_count %}({{ unread_count }}){% endif %}</a>
+      <a href="{{ url_for('dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('logout') }}">Logout ({{ current_user.name }})</a>
+    {% else %}
+      <a href="{{ url_for('login') }}">Login</a>
+      <a class="btn" href="{{ url_for('register') }}">Register</a>
+    {% endif %}
+  </nav>
+</header>
+<main class="container">
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}<div class="flash">{% for m in messages %}<p>{{ m }}</p>{% endfor %}</div>{% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+<footer><p>Redway Academy • redwayacademy.com • ভুল থেকেই শেখা, ভুল করেই জেতা • Mistakes Mark the Way</p>
+<p>NCTB English for Class 6–12 • English for Today • English 2nd Paper • Spoken English</p></footer>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

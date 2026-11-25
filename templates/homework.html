@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Homework</h1>
+{% if current_user and current_user.role == 'teacher' %}
+<h2>Create homework</h2>
+<form method="post"><label>Title <input name="title" required></label><label>Class <input name="class_level" required placeholder="6, 7, 8, 9-10, 11-12"></label><label>Details <textarea name="details" required></textarea></label><button class="btn" type="submit">Create homework</button></form>
+{% endif %}
+{% for h in homework %}
+<div class="card"><h3>{{ h.title }}</h3><p>Class {{ h.class_level }} — {{ h.details }}</p>
+{% if current_user and current_user.role == 'student' %}
+<form method="post" action="{{ url_for('submit_homework', hw_id=h.id) }}"><label>Your answer <textarea name="answer" required></textarea></label><label>File link (optional) <input name="file_link"></label><button class="btn" type="submit">Submit homework</button></form>
+{% endif %}</div>
+{% else %}<p>No homework yet.</p>{% endfor %}
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Free SSC / HSC Retake Registration — Second Chance</h1>
+<p>Free registration for SSC / HSC retake students. Upload your admit card and tabulation sheet. Our system checks the details automatically; if anything is unclear, a teacher reviews it — nothing is auto-rejected.</p>
+<form method="post" enctype="multipart/form-data">
+<label>Student name <input name="student_name" required></label>
+<label>Phone number <input name="phone" required placeholder="01XXXXXXXXX"></label>
+<label>Exam <select name="exam"><option>SSC</option><option>HSC</option></select></label>
+<label>Exam year <input name="exam_year" required placeholder="2025"></label>
+<label>Roll number <input name="roll_no" required></label>
+<label>Registration number <input name="reg_no" required></label>
+<label>Result (as on tabulation sheet) <input name="result_text" required placeholder="e.g. GPA 3.50 / Failed in English"></label>
+<label>Admit card (PDF / JPG / PNG) <input type="file" name="admit_card" required></label>
+<label>Tabulation sheet (PDF / JPG / PNG) <input type="file" name="tabulation" required></label>
+<button class="btn" type="submit">Register free</button></form>
+{% endblock %}

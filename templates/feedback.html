@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Feedback &amp; Suggestions</h1>
+<form method="post"><label>Your feedback / suggestion <textarea name="message" required></textarea></label><button class="btn" type="submit">Send feedback</button></form>
+{% for f in feedback %}<div class="card"><p>{{ f.message }}</p><small>{{ f.author_name }} — {{ f.created_at }}</small></div>{% else %}<p>No feedback yet.</p>{% endfor %}
+{% endblock %}

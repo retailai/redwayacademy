@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ course.title }}</h1>
+<p><span class="badge">{{ course.paper }}</span> Class {{ course.class_level }} • {{ course.lessons }} lessons • <strong>৳{{ course.price_bdt }}</strong></p>
+<p>{{ course.description }}</p>
+<p><a class="btn" href="{{ url_for('buy', course_id=course.id) }}">Buy with bKash / Nagad</a> <a href="{{ url_for('courses') }}">Back to courses</a></p>
+{% endblock %}

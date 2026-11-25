@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Dashboard — {{ user.name }} ({{ user.role }})</h1>
+<p>Phone: {{ user.phone }}{% if user.class_level %} • Class {{ user.class_level }}{% endif %}</p>
+<h2>Notifications</h2>
+{% if notifications %}<ul>{% for n in notifications %}<li>{{ n.message }} <small>({{ n.created_at }})</small></li>{% endfor %}</ul>{% else %}<p>No notifications yet.</p>{% endif %}
+<p><a href="{{ url_for('notifications') }}">All notifications</a> • <a href="{{ url_for('progress') }}">Progress</a> • <a href="{{ url_for('feedback') }}">Feedback</a> • <a href="{{ url_for('homework') }}">Homework</a> • <a href="{{ url_for('checkin') }}">Check-in</a></p>
+{% if user.role == 'teacher' %}
+<h2>Teacher panel</h2>
+<form method="post" action="{{ url_for('announce') }}"><label>Announcement to all <input name="message" required></label><button class="btn" type="submit">Send</button></form>
+<p><a class="btn" href="{{ url_for('admin_teachers') }}">Add Teacher Account</a></p>
+<h3>Orders to verify (bKash / Nagad)</h3>
+{% for o in orders %}<p>{{ o.course_title }} — {{ o.student_name }} ({{ o.student_phone }}) — {{ o.method }}, TrxID {{ o.trxid }}, ৳{{ o.amount_bdt }} — <strong>{{ o.status }}</strong>
+{% if o.status == 'pending' %}<form method="post" action="{{ url_for('verify_order', order_id=o.id) }}" style="display:inline"><button name="status" value="verified">Verify</button><button name="status" value="rejected">Reject</button></form>{% endif %}</p>{% else %}<p>No orders yet.</p>{% endfor %}
+<h3>Retake registrations</h3>
+{% for r in retakes %}<p>{{ r.student_name }} — {{ r.exam }} {{ r.exam_year }}, Roll {{ r.roll_no }}, Reg {{ r.reg_no }} — <strong>{{ r.status }}</strong> — {{ r.reasons }}
+{% if r.admit_file %}<a href="{{ url_for('uploaded_file', filename=r.admit_file) }}">Admit</a>{% endif %}{% if r.tabulation_file %}<a href="{{ url_for('uploaded_file', filename=r.tabulation_file) }}">Tabulation</a>{% endif %}
+<form method="post" action="{{ url_for('review_retake', reg_id=r.id) }}" style="display:inline"><button name="status" value="auto_verified">Approve</button><button name="status" value="needs_review">Needs review</button></form></p>{% else %}<p>No retake registrations yet.</p>{% endfor %}
+<h3>Homework submissions</h3>
+{% for s in submissions %}<p>{{ s.student_name }} — {{ s.answer }} — <strong>{{ s.status }}</strong>
+<form method="post" action="{{ url_for('review_submission', sub_id=s.id) }}" style="display:inline"><input name="teacher_comment" placeholder="Comment"><button name="status" value="checked">Checked</button><button name="status" value="needs work">Needs work</button></form></p>{% else %}<p>No submissions yet.</p>{% endfor %}
+{% endif %}
+{% if user.role in ('student', 'parent') %}
+<h2>Your progress</h2>
+{% for p in progress %}<p>Score <strong>{{ p.score }}</strong> — {{ p.suggestion }} <small>({{ p.created_at }})</small></p>{% else %}<p>No progress notes yet.</p>{% endfor %}
+<h2>Your orders</h2>
+{% for o in orders %}<p>{{ o.course_title }} — {{ o.method }}, TrxID {{ o.trxid }} — <strong>{{ o.status }}</strong></p>{% else %}<p>No orders yet.</p>{% endfor %}
+{% endif %}
+{% if user.role == 'student' %}
+<h2>Your homework</h2>
+{% for h in homework %}<p><strong>{{ h.title }}</strong> (Class {{ h.class_level }}) — {{ h.details }}</p>{% else %}<p>No homework yet.</p>{% endfor %}
+{% endif %}
+{% endblock %}

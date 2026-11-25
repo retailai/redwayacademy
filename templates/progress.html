@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Student Progress</h1>
+{% if current_user and current_user.role == 'teacher' %}
+<form method="post"><label>Student phone <input name="student_phone" required></label><label>Student name <input name="student_name" required></label><label>Score <input name="score" type="number" min="0" max="100" required></label><label>Suggestion <textarea name="suggestion"></textarea></label><button class="btn" type="submit">Add progress</button></form>
+{% endif %}
+{% for p in progress %}<div class="card"><p><strong>{{ p.student_name }}</strong> — Score <strong>{{ p.score }}</strong></p><p>{{ p.suggestion }}</p><small>{{ p.created_at }}</small></div>{% else %}<p>No progress notes yet.</p>{% endfor %}
+{% endblock %}

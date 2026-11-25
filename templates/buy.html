@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Buy: {{ course.title }}</h1>
+<p>Price: <strong>৳{{ course.price_bdt }}</strong> • {{ course.lessons }} lessons</p>
+<p>Pay by bKash or Nagad (send money), then enter your Transaction ID below. A teacher will verify it.</p>
+<form method="post"><label>Payment method <select name="method"><option>bKash</option><option>Nagad</option></select></label><label>Transaction ID (TrxID) <input name="trxid" required></label><button class="btn" type="submit">Submit payment</button></form>
+{% endblock %}

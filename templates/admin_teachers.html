@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Add Teacher Account</h1>
+<p>Only a logged-in teacher / admin can add teachers.</p>
+<form method="post"><label>Name <input name="name" required></label><label>Phone <input name="phone" required></label><label>Password <input type="password" name="password" required></label><button class="btn" type="submit">Add teacher</button></form>
+<h2>Teachers</h2>
+{% for t in teachers %}<p>{{ t.name }} — {{ t.phone }}</p>{% endfor %}
+{% endblock %}

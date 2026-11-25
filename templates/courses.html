@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Courses</h1>
+<p>Filter: <a href="{{ url_for('courses') }}">All</a> | <a href="{{ url_for('courses', paper='1st Paper') }}">1st Paper</a> | <a href="{{ url_for('courses', paper='2nd Paper') }}">2nd Paper</a> | <a href="{{ url_for('courses', paper='Spoken English') }}">Spoken English</a> — showing: <strong>{{ paper }}</strong></p>
+<div class="grid">
+{% for c in courses %}
+<div class="card"><span class="badge">{{ c.paper }}</span><h3>{{ c.title }}</h3><p>Class {{ c.class_level }} • {{ c.lessons }} lessons</p><p>{{ c.description }}</p><p><strong>৳{{ c.price_bdt }}</strong></p><p><a class="btn" href="{{ url_for('buy', course_id=c.id) }}">Buy with bKash / Nagad</a></p></div>
+{% endfor %}
+</div>
+{% endblock %}
