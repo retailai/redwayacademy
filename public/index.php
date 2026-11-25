@@ -133,6 +133,9 @@ if ($path === '/testimonials') {
     if ($method === 'POST') {
         run("INSERT INTO testimonials (author_name, role, class_level, message, status, created_at) VALUES (?,?,?,?,'pending',?)",
             [post('author_name'), post('role', 'Student'), post('class_level'), post('message'), now_str()]);
+        foreach (q("SELECT phone FROM users WHERE role='teacher'") as $t) {
+            notify($t['phone'], "New endorsement to review from " . post('author_name') . " (" . post('role', 'Student') . ").", 'testimonial');
+        }
         flash('Thank you! Your endorsement was sent for admin approval and will be published after review.');
         redirect('/testimonials');
     }

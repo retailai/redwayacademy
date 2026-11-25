@@ -7,6 +7,9 @@
 <meta name="description" content="Redway Academy — NCTB English for Class 6–12. Mistakes Mark the Way: English for Today, English 2nd Paper and Spoken English.">
 <meta name="theme-color" content="#006A4E">
 <meta name="csrf-token" content="<?= e($csrf_token ?? '') ?>">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="180x180" href="/assets/img/favicon.png">
+<link rel="apple-touch-icon" href="/assets/img/favicon.png">
 <title><?= e($title ?? 'Redway Academy — Mistakes Mark the Way') ?></title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

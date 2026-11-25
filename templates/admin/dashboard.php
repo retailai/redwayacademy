@@ -13,7 +13,7 @@
   <div class="card stat-card"><p class="stat-value"><?= (int)$counts['orders_pending'] ?> / <?= (int)$counts['orders_total'] ?></p><p class="stat-label">Orders pending / total</p></div>
   <div class="card stat-card"><p class="stat-value"><?= (int)$counts['submissions_pending'] ?></p><p class="stat-label">Homework submissions waiting</p></div>
   <div class="card stat-card"><p class="stat-value"><?= (int)$counts['retakes_pending'] ?></p><p class="stat-label">Retakes needing review</p></div>
-  <div class="card stat-card"><p class="stat-value"><?= (int)$counts['testimonials_pending'] ?></p><p class="stat-label">Reviews waiting for approval</p></div>
+  <div class="card stat-card"><p class="stat-value"><?= (int)$counts['testimonials_pending'] ?></p><p class="stat-label"><a href="/admin/testimonials">Reviews waiting for approval</a></p></div>
   <div class="card stat-card"><p class="stat-value"><?= (int)$counts['checkins_pending'] ?></p><p class="stat-label">Pending arrivals</p></div>
 </div>
 <section aria-labelledby="recent-orders">
