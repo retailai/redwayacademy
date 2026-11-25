@@ -27,6 +27,11 @@
   <p><a class="btn" href="/admin/teachers">Admin → Teachers</a> (teachers are added by an admin only).</p>
 </section>
 <?php else: ?>
+<section aria-labelledby="my-courses">
+  <h2 id="my-courses">My Courses — আমার কোর্স</h2>
+  <?php foreach ($my_courses ?? [] as $mc): ?><div class="card"><p><strong><?= e($mc['title']) ?></strong> — Class <?= e($mc['class_level']) ?> • <?= (int)$mc['lessons'] ?> lessons</p><p class="hero-actions"><a class="btn btn-primary" href="/course/<?= (int)$mc['id'] ?>">Open course</a> <a class="btn btn-secondary" href="/homework">Homework</a> <a class="btn btn-secondary" href="/progress">My Progress</a></p></div><?php endforeach; ?>
+  <?php if (empty($my_courses ?? [])): ?><p><?= $user['role'] === 'parent' ? 'Your linked student is not enrolled in any course yet.' : 'You are not enrolled in any course yet.' ?> <a href="/courses">Browse courses</a> — buy with bKash / Nagad, and a teacher will verify your payment.</p><?php endif; ?>
+</section>
 <section aria-labelledby="my-progress">
   <h2 id="my-progress">My progress</h2>
   <?php foreach ($progress ?? [] as $p): ?><div class="card"><p><strong>Score: <?= (int)$p['score'] ?></strong> — <?= e($p['suggestion']) ?> <small>(<?= e($p['created_at']) ?>)</small></p></div><?php endforeach; ?>

@@ -106,7 +106,28 @@ if ($path === '/courses' && $method === 'GET') {
 if (preg_match('#^/course/(\d+)$#', $path, $m) && $method === 'GET') {
     $c = q1('SELECT * FROM courses WHERE id=?', [(int)$m[1]]);
     if (!$c) abort_page(404, 'Sorry — that course does not exist.');
-    render('course_detail', ['title' => $c['title'] . ' — Redway Academy', 'course' => $c]);
+    $u = current_user();
+    $enrolled = $u && $u['role'] === 'student' ? is_enrolled($u['phone'], (int)$c['id']) : false;
+    $can_view = $enrolled || ($u && $u['role'] === 'teacher');
+    render('course_detail', ['title' => $c['title'] . ' — Redway Academy', 'course' => $c,
+        'is_enrolled' => $enrolled, 'can_view_lessons' => $can_view,
+        'lessons' => $can_view ? q('SELECT lesson_no, title FROM lessons WHERE course_id=? ORDER BY lesson_no', [(int)$c['id']]) : []]);
+}
+// --- Lesson view: enrolled students and teachers only -----------------------
+if (preg_match('#^/course/(\d+)/lesson/(\d+)$#', $path, $m) && $method === 'GET') {
+    $u = login_required();
+    $c = q1('SELECT * FROM courses WHERE id=?', [(int)$m[1]]);
+    if (!$c) abort_page(404, 'Sorry — that course does not exist.');
+    $lesson = q1('SELECT * FROM lessons WHERE course_id=? AND lesson_no=?', [(int)$m[1], (int)$m[2]]);
+    if (!$lesson) abort_page(404, 'Sorry — that lesson does not exist.');
+    $allowed = ($u['role'] === 'teacher') || ($u['role'] === 'student' && is_enrolled($u['phone'], (int)$c['id']));
+    if (!$allowed) {
+        flash('Please enrol in this course first — buy it with bKash / Nagad and a teacher will verify your payment.');
+        redirect('/course/' . (int)$c['id']);
+    }
+    $total = (int)q1('SELECT COUNT(*) AS n FROM lessons WHERE course_id=?', [(int)$c['id']])['n'];
+    render('lesson', ['title' => $lesson['title'] . ' — ' . $c['title'],
+        'course' => $c, 'lesson' => $lesson, 'total' => $total]);
 }
 if ($path === '/testimonials') {
     if ($method === 'POST') {
@@ -189,14 +210,18 @@ if ($path === '/dashboard' && $method === 'GET') {
             'students' => q("SELECT * FROM users WHERE role='student' ORDER BY id DESC LIMIT 50")];
     } elseif ($u['role'] === 'parent') {
         $phone = $u['linked_student_phone'] ?: $u['phone'];
+        $linked = $u['linked_student_phone'] ? q1('SELECT name FROM users WHERE phone=? AND role=?', [$u['linked_student_phone'], 'student']) : null;
         $ctx += ['progress' => q('SELECT * FROM progress_notes WHERE student_phone=? ORDER BY id DESC', [$phone]),
             'orders' => q('SELECT * FROM orders WHERE student_phone=? ORDER BY id DESC', [$phone]),
-            'checkins' => q('SELECT * FROM checkins WHERE student_phone=? ORDER BY id DESC LIMIT 10', [$phone])];
+            'checkins' => q('SELECT * FROM checkins WHERE student_phone=? ORDER BY id DESC LIMIT 10', [$phone]),
+            'my_courses' => enrolled_courses($phone),
+            'linked_student_name' => $linked['name'] ?? null];
     } else {
         $ctx += ['progress' => q('SELECT * FROM progress_notes WHERE student_phone=? ORDER BY id DESC', [$u['phone']]),
             'orders' => q('SELECT * FROM orders WHERE student_phone=? ORDER BY id DESC', [$u['phone']]),
             'homework' => q('SELECT * FROM homework ORDER BY id DESC'),
-            'my_submissions' => q('SELECT * FROM submissions WHERE student_phone=? ORDER BY id DESC', [$u['phone']])];
+            'my_submissions' => q('SELECT * FROM submissions WHERE student_phone=? ORDER BY id DESC', [$u['phone']]),
+            'my_courses' => enrolled_courses($u['phone'])];
     }
     $ctx['notifications'] = q('SELECT * FROM notifications WHERE recipient_phone=? ORDER BY id DESC LIMIT 10', [$u['phone']]);
     render('dashboard', $ctx);

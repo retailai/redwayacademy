@@ -58,6 +58,19 @@ function notify_parents_of(string $student_phone, string $message, string $kind 
     foreach ($st->fetchAll() as $p) notify($p['phone'], $message, $kind);
 }
 
+/** Enrollment: a verified bKash/Nagad order IS the enrollment. */
+function is_enrolled(string $phone, int $course_id): bool {
+    $st = db()->prepare("SELECT COUNT(*) FROM orders WHERE student_phone=? AND course_id=? AND status='verified'");
+    $st->execute([$phone, $course_id]);
+    return (int)$st->fetchColumn() > 0;
+}
+/** Verified courses for a phone, most recent first. */
+function enrolled_courses(string $phone): array {
+    $st = db()->prepare("SELECT DISTINCT c.* FROM courses c JOIN orders o ON o.course_id=c.id WHERE o.student_phone=? AND o.status='verified' ORDER BY o.id DESC");
+    $st->execute([$phone]);
+    return $st->fetchAll();
+}
+
 function allowed_upload(string $name): bool {
     $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
     return in_array($ext, ['pdf', 'jpg', 'jpeg', 'png'], true);

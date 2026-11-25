@@ -262,3 +262,8 @@ input:focus,select:focus,textarea:focus{outline:3px solid var(--blue);outline-of
   html{scroll-behavior:auto}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+/* Lesson list on enrolled course pages */
+.lesson-list{margin:0 0 16px;padding-left:22px}
+.lesson-list li{margin:6px 0}
+.lesson-list a{font-weight:600}

@@ -79,6 +79,7 @@ function init_db(PDO $pdo): void {
         "CREATE TABLE IF NOT EXISTS checkin_codes (id $ai, pin {$vc(10)} NOT NULL, class_level {$vc(20)}, teacher_phone {$vc(20)}, is_active $bool NOT NULL DEFAULT 1, created_at $ts)",
         "CREATE TABLE IF NOT EXISTS checkins (id $ai, student_phone {$vc(20)}, student_name $txt, class_level {$vc(20)}, pin {$vc(10)}, status {$vc(20)} DEFAULT 'pending', created_at $ts)",
         "CREATE TABLE IF NOT EXISTS announcements (id $ai, teacher_phone {$vc(20)}, message $txt, created_at $ts)",
+        "CREATE TABLE IF NOT EXISTS lessons (id $ai, course_id $int, lesson_no $int, title $txt NOT NULL, body $txt NOT NULL, created_at $ts)",
         // Login rate-limit: 5 failed attempts per phone in 15 minutes (DB-backed, survives restart).
         "CREATE TABLE IF NOT EXISTS login_attempts (id $ai, phone {$vc(20)}, attempted_at $ts)",
     ];
@@ -108,6 +109,9 @@ function init_db(PDO $pdo): void {
         $st = $pdo->prepare('INSERT INTO courses (title, class_level, paper, price_bdt, lessons, description) VALUES (?,?,?,?,?,?)');
         foreach (seed_courses() as $c) $st->execute($c);
     }
+    // Seed lessons once (only when the lessons table is empty).
+    require_once __DIR__ . '/lessons_seed.php';
+    seed_lessons($pdo);
     // Backfill: the earliest teacher is the Super Admin.
     $first = $pdo->query("SELECT id FROM users WHERE role='teacher' ORDER BY id LIMIT 1")->fetch();
     if ($first) $pdo->exec('UPDATE users SET is_super_admin=1 WHERE id=' . (int)$first['id']);
