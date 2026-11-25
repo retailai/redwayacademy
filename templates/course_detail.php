@@ -10,7 +10,7 @@ foreach ($lessons as $l) {
 <nav class="crumb" aria-label="Breadcrumb"><a href="/"><?= t('crumb_home') ?></a> / <a href="/courses"><?= t('crumb_courses') ?></a> / <?= e($course['title']) ?></nav>
 <div class="detail-layout">
   <article class="detail">
-    <p style="margin:0"><span class="unit"><?= e($course['paper']) ?></span></p>
+    <p style="margin:0"><span class="unit"><?= e($course['paper']) ?></span> <span class="unit" style="background:var(--green-soft);color:var(--green-dark)"><?= e(track_label((string)($course['track'] ?? 'academic'))) ?></span></p>
     <h1 style="margin-top:10px"><?= e($course['title']) ?></h1>
     <div class="meta-row">
       <span><?= t('class') ?> <?= e($course['class_level']) ?></span> •
@@ -69,12 +69,15 @@ foreach ($lessons as $l) {
   </article>
 
   <aside class="buy-card" aria-label="<?= e(t('buy_now')) ?>">
-    <div class="price-row"><span class="price"><?= tk((int)$course['price_bdt']) ?></span><span class="price-old" title="<?= e(t('regular_price')) ?>"><?= tk(orig_price((int)$course['price_bdt'])) ?></span></div>
-    <p style="color:var(--muted);margin:8px 0 0"><?= num((int)$course['lessons']) ?> <?= t('lessons') ?> • <?= t('class') ?> <?= e($course['class_level']) ?></p>
+    <div class="price-row"><span class="price"><?= sprintf(t('monthly_fee'), tk((int)$track_fee)) ?></span></div>
+    <p style="color:var(--muted);margin:8px 0 0"><?= live_class_text() ?></p>
+    <p style="color:var(--muted);margin:4px 0 0"><?= num((int)$course['lessons']) ?> <?= t('lessons') ?> • <?= t('class') ?> <?= e($course['class_level']) ?></p>
     <?php if (!empty($is_enrolled)): ?>
       <a class="btn btn-green" href="/course/<?= (int)$course['id'] ?>/lesson/1"><?= t('open_course') ?> →</a>
+      <?php if (!empty($is_subscribed)): ?><p style="margin:10px 0 0;color:var(--green-dark);font-weight:700"><?= sprintf(t('sub_active_until'), num(subscription_until($current_user['phone'], (string)($course['track'] ?? 'academic')))) ?></p><?php endif; ?>
     <?php else: ?>
-      <a class="btn btn-red" href="/buy/<?= (int)$course['id'] ?>"><?= sprintf(t('buy_now_price'), tk((int)$course['price_bdt'])) ?></a>
+      <a class="btn btn-red" href="/buy/<?= (int)$course['id'] ?>?plan=monthly"><?= sprintf(t('subscribe'), tk((int)$track_fee)) ?></a>
+      <a class="btn btn-secondary" href="/buy/<?= (int)$course['id'] ?>?plan=once" style="margin-top:10px"><?= sprintf(t('buy_once'), tk((int)$course['price_bdt'])) ?></a>
     <?php endif; ?>
     <h3 style="margin-top:20px"><?= t('includes') ?></h3>
     <ul class="includes-list">

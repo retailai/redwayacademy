@@ -4,7 +4,7 @@
   <a href="/admin" aria-current="page">Dashboard</a><a href="/admin/courses">Courses</a><a href="/admin/users">Users</a>
   <a href="/admin/teachers">Teachers</a><a href="/admin/homework">Homework</a><a href="/admin/orders">Orders</a>
   <a href="/admin/retakes">Retakes</a><a href="/admin/testimonials">Reviews</a><a href="/admin/progress">Progress</a>
-  <a href="/admin/notifications">Notify</a><a href="/admin/checkins">Check-in</a>
+  <a href="/admin/notifications">Notify</a><a href="/admin/checkins">Check-in</a><a href="/admin/settings">Settings</a>
 </nav>
 <?php if (!empty($counts)): ?>
 <div class="grid">

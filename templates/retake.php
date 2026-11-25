@@ -1,3 +1,11 @@
+<?php // Free retake registration. When the campaign is switched OFF in the
+// Admin Panel, $campaign_off is true and visitors see a message, not the form.
+?>
+<?php if (!empty($campaign_off)): ?>
+<h1 class="page-title"><?= t('retake_off_title') ?></h1>
+<p class="section-lead"><?= t('retake_off_body') ?></p>
+<p><a class="btn btn-primary" href="/courses"><?= t('cta_courses') ?></a></p>
+<?php else: ?>
 <h1 class="page-title"><?= t('retake_title') ?></h1>
 <p class="section-lead"><?= sprintf(t('retake_sub'), MAX_UPLOAD_MB) ?></p>
 <form method="post" action="/retake" enctype="multipart/form-data">
@@ -13,3 +21,4 @@
   <label><?= t('tabulation') ?> <input type="file" name="tabulation" accept=".pdf,.jpg,.jpeg,.png"></label>
   <button class="btn" type="submit"><?= t('submit_retake') ?></button>
 </form>
+<?php endif; ?>

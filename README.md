@@ -63,7 +63,8 @@ Hostinger Premium shared hosting supports PHP + MySQL, but **not Python** — th
 Log in as a **Teacher**, then open **Admin Panel** (top menu, or `/admin`).
 
 - **Dashboard** — counts: users by role, active courses, pending / total orders, pending homework submissions, retakes needing review, testimonials waiting for approval, pending check-ins
-- **Courses** — full CRUD: create, edit (name, class, paper, price, lessons, description, active), delete
+- **Courses** — full CRUD: create, edit (name, class, paper, track, price, lessons, description, active), delete
+- **Settings** — monthly subscription fees and the retake campaign switch (see below)
 - **Users** — view all users; Super Admin only can change a role or deactivate / activate an account
 - **Teachers** — add new teacher accounts (admin only)
 - **Homework** — view, edit and delete homework; review submissions (checked / needs work + comment)
@@ -88,15 +89,26 @@ Log in as a **Teacher**, then open **Admin Panel** (top menu, or `/admin`).
 | `/notifications` | In-app notifications (bell + list, marks read) |
 | `/announce` | Teacher announcement to all users |
 | `/testimonials` | Approved reviews + submit an endorsement (pending until approved) |
-| `/buy/{id}` | bKash / Nagad send-money + TrxID order |
+| `/buy/{id}?plan=monthly\|once` | bKash / Nagad send-money + TrxID order (monthly subscription or one-time) |
 | `/order/{id}/verify` | Teacher verifies / rejects an order |
 | `/retake`, `/retake/{id}` | Free SSC/HSC retake registration + status |
 | `/retake/{id}/review` | Teacher reviews a retake registration |
 | `/checkin`, `/checkin/{id}/confirm` | PIN check-in (teacher creates PIN, student enters it, teacher confirms) |
 | `/uploads/{file}` | Uploaded retake files (login required) |
-| `/admin`, `/admin/courses…`, `/admin/users…`, `/admin/teachers`, `/admin/homework…`, `/admin/orders…`, `/admin/retakes…`, `/admin/testimonials…`, `/admin/progress…`, `/admin/notifications`, `/admin/checkins…` | Admin Panel (teacher only; role changes Super Admin only) |
+| `/admin`, `/admin/courses…`, `/admin/users…`, `/admin/teachers`, `/admin/homework…`, `/admin/orders…`, `/admin/retakes…`, `/admin/testimonials…`, `/admin/progress…`, `/admin/notifications`, `/admin/checkins…`, `/admin/settings` | Admin Panel (teacher only; role changes Super Admin only) |
 | `/health` | `{"status":"ok"}` health check |
 | `/robots.txt`, `/sitemap.xml` | SEO files |
+
+## Courses: two tracks, monthly subscription, settings
+
+- **Tracks** — the 11 courses are split into exactly two tracks: **Academic English** (English for Today 1st Paper + Grammar & Composition 2nd Paper together, Class 6–12) and **Spoken English** (for all). `/courses` first shows the 2 track cards; Academic then asks for the class (6, 7, 8, 9-10, 11-12), Spoken asks for the last education level (SSC / HSC / Honours / Other). Course rows carry a `track` column (auto-migrated; backfilled from the paper).
+- **Monthly subscription (live)** — ৳1450/month for live classes, 3 days a week on Google Meet / Zoom, shown as the primary price on track cards, course cards, course detail and the buy page. A verified monthly order enrols the student in **every course of that track for 30 days** from verification (`orders.valid_until`); the one-time course price stays as a secondary option. Buy flow is the same manual bKash / Nagad + TrxID + sender-mobile verification.
+- **Settings (Admin Panel → Settings, `settings` table)** — all editable without a code change:
+  - `subscription_fee_live` — live monthly fee, default ৳1450
+  - `recorded_fee` — recorded class fee, default 0 = not set yet (not shown to students until set)
+  - `live_days_per_week` — live class days per week, default 3 (the "3 days a week, Google Meet / Zoom" text on the site comes from this)
+  - `retake_campaign_active` — free SSC/HSC retake campaign switch (see below)
+- **Free retake = campaign** — when `retake_campaign_active` is OFF, the announcement strip, nav link and home CTA are hidden and `/retake` shows a bilingual "campaign is not running right now" message instead of the form (POSTs are refused too). Flip it back ON in Admin Panel → Settings at any time.
 
 ## Security
 

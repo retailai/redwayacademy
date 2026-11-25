@@ -13,29 +13,18 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/style.css?v=lb1">
+<link rel="stylesheet" href="/assets/css/style.css?v=lb2">
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to main content</a>
-<div class="announce" role="note"><?= t('announce') ?> — <a href="/retake"><?= t('nav_retake') ?></a></div>
-<header class="site-header">
+<?php if (!empty($retake_active) && empty($_COOKIE['rw_announce_hide'])): ?>
+<div class="announce" role="note" id="announceBar"><span><?= t('announce') ?> — <a href="/retake"><?= t('nav_retake') ?></a></span><button class="announce-close" type="button" id="announceClose" aria-label="<?= e(t('announce_close')) ?>">✕</button></div>
+<?php endif; ?>
+<header class="site-header" id="siteHeader">
   <div class="header-row">
     <a class="brand" href="/" aria-label="Redway Academy — home">
       <span class="brand-logo"><img src="/assets/img/logo.png" alt="Redway Academy — Mistakes Mark the Way" width="2400" height="819"></span>
     </a>
-    <form class="header-search" role="search" method="get" action="/courses">
-      <label class="visually-hidden" for="q"><?= t('search_ph') ?></label>
-      <input id="q" name="q" type="search" placeholder="<?= e(t('search_ph')) ?>" value="<?= e($_GET['q'] ?? '') ?>">
-      <button type="submit"><?= t('search_btn') ?></button>
-    </form>
-    <nav class="main-nav" aria-label="Main navigation">
-      <a href="/"<?php if (($_SERVER['REQUEST_URI'] ?? '/') === '/'): ?> aria-current="page"<?php endif; ?>><?= t('nav_home') ?></a>
-      <a href="/courses"<?php if (str_starts_with($_SERVER['REQUEST_URI'] ?? '', '/course') || str_starts_with($_SERVER['REQUEST_URI'] ?? '', '/buy')): ?> aria-current="page"<?php endif; ?>><?= t('nav_courses') ?></a>
-      <a href="/homework"><?= t('nav_homework') ?></a>
-      <a href="/retake"><?= t('nav_retake') ?></a>
-      <a href="/testimonials"><?= t('nav_reviews') ?></a>
-      <a href="/checkin"><?= t('nav_checkin') ?></a>
-    </nav>
     <div class="header-right">
       <span class="lang-switch" role="group" aria-label="Language / ভাষা">
         <a href="<?= e(url_with_query(['lang' => 'bn'])) ?>"<?php if (lang_is_bn()): ?> class="active" aria-current="true"<?php endif; ?>><?= t('lang_bangla') ?></a>
@@ -49,7 +38,7 @@
         <div class="avatar-menu" id="avatarMenu">
           <button class="avatar-btn" type="button" aria-haspopup="true" aria-expanded="false" id="avatarBtn">
             <span class="avatar-circle" aria-hidden="true"><?= e(mb_strtoupper(mb_substr($current_user['name'], 0, 1, 'UTF-8'), 'UTF-8')) ?></span>
-            <span><?= e($current_user['name']) ?></span>
+            <span class="avatar-name"><?= e($current_user['name']) ?></span>
           </button>
           <div class="avatar-dropdown" role="menu" aria-label="Account menu">
             <div class="who"><b><?= e($current_user['name']) ?></b><span><?= e($current_user['phone']) ?> • <?= e(role_label($current_user['role'])) ?><?php if ($is_super_admin): ?> • <?= t('super_admin') ?><?php endif; ?></span></div>
@@ -64,6 +53,19 @@
         <a class="btn" href="/register"><?= t('nav_register') ?></a>
       <?php endif; ?>
     </div>
+    <form class="header-search" role="search" method="get" action="/courses">
+      <label class="visually-hidden" for="q"><?= t('search_ph') ?></label>
+      <input id="q" name="q" type="search" placeholder="<?= e(t('search_ph')) ?>" value="<?= e($_GET['q'] ?? '') ?>">
+      <button type="submit"><?= t('search_btn') ?></button>
+    </form>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="/"<?php if (($_SERVER['REQUEST_URI'] ?? '/') === '/'): ?> aria-current="page"<?php endif; ?>><?= t('nav_home') ?></a>
+      <a href="/courses"<?php if (str_starts_with($_SERVER['REQUEST_URI'] ?? '', '/course') || str_starts_with($_SERVER['REQUEST_URI'] ?? '', '/buy')): ?> aria-current="page"<?php endif; ?>><?= t('nav_courses') ?></a>
+      <a href="/homework"><?= t('nav_homework') ?></a>
+      <?php if (!empty($retake_active)): ?><a href="/retake"><?= t('nav_retake') ?></a><?php endif; ?>
+      <a href="/testimonials"><?= t('nav_reviews') ?></a>
+      <a href="/checkin"><?= t('nav_checkin') ?></a>
+    </nav>
   </div>
 </header>
 <main class="container" id="main">
@@ -87,16 +89,15 @@
         <li><a href="/"><?= t('nav_home') ?></a></li>
         <li><a href="/courses"><?= t('nav_courses') ?></a></li>
         <li><a href="/homework"><?= t('nav_homework') ?></a></li>
-        <li><a href="/retake"><?= t('nav_retake') ?></a></li>
+        <?php if (!empty($retake_active)): ?><li><a href="/retake"><?= t('nav_retake') ?></a></li><?php endif; ?>
         <li><a href="/testimonials"><?= t('nav_reviews') ?></a></li>
       </ul>
     </div>
     <div>
       <h3><?= t('foot_courses') ?></h3>
       <ul>
-        <li><a href="/courses?paper=1st+Paper">English for Today — 1st Paper</a></li>
-        <li><a href="/courses?paper=2nd+Paper">English 2nd Paper — Grammar</a></li>
-        <li><a href="/courses?paper=Spoken+English">Spoken English</a></li>
+        <li><a href="/courses?track=academic">Academic English — 1st &amp; 2nd Paper</a></li>
+        <li><a href="/courses?track=spoken">Spoken English</a></li>
         <li><a href="/checkin"><?= t('nav_checkin') ?></a></li>
       </ul>
     </div>

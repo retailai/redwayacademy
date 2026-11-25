@@ -120,41 +120,65 @@ if ($path === '/' && $method === 'GET') {
         'resume_course' => $resume]);
 }
 if ($path === '/courses' && $method === 'GET') {
-    $paper = $_GET['paper'] ?? 'All';
+    // Two-step picker, few clicks: track -> class (Academic) or education
+    // level (Spoken) -> course list. Search (?q=) jumps straight to results.
     $qtext = trim($_GET['q'] ?? '');
-    $band = in_array($_GET['band'] ?? 'all', ['all', 'under', 'mid', 'over'], true) ? ($_GET['band'] ?? 'all') : 'all';
-    $min_price = $_GET['min_price'] ?? '';
-    $max_price = $_GET['max_price'] ?? '';
+    // Old paper links (?paper=) map onto tracks for backwards compatibility.
+    $track = in_array($_GET['track'] ?? '', ['academic', 'spoken'], true) ? $_GET['track'] : null;
+    if ($track === null && isset($_GET['paper'])) {
+        $track = $_GET['paper'] === 'Spoken English' ? 'spoken' : 'academic';
+    }
+    $class = $_GET['class'] ?? '';
+    $edu = in_array($_GET['edu'] ?? '', ['SSC', 'HSC', 'Honours', 'Other'], true) ? $_GET['edu'] : '';
     $page = max(1, (int)($_GET['page'] ?? 1));
     $per_page = 6;
+    $step = 'tracks'; // tracks | pick | list
     $conds = ['active=1']; $params = [];
-    if (in_array($paper, ['1st Paper', '2nd Paper', 'Spoken English'], true)) { $conds[] = 'paper=?'; $params[] = $paper; }
-    if ($qtext !== '') { $conds[] = '(title LIKE ? OR description LIKE ?)'; $params[] = '%' . $qtext . '%'; $params[] = '%' . $qtext . '%'; }
-    if ($band === 'under') $conds[] = 'price_bdt<800';
-    elseif ($band === 'mid') $conds[] = 'price_bdt BETWEEN 800 AND 1000';
-    elseif ($band === 'over') $conds[] = 'price_bdt>1000';
-    if ($min_price !== '' && is_numeric($min_price)) { $conds[] = 'price_bdt>=?'; $params[] = (int)$min_price; }
-    if ($max_price !== '' && is_numeric($max_price)) { $conds[] = 'price_bdt<=?'; $params[] = (int)$max_price; }
-    $where = implode(' AND ', $conds);
-    $st = db()->prepare("SELECT COUNT(*) FROM courses WHERE $where");
-    $st->execute($params);
-    $total = (int)$st->fetchColumn();
-    $pages = max(1, (int)ceil($total / $per_page));
-    $page = min($page, $pages);
-    $st = db()->prepare("SELECT * FROM courses WHERE $where ORDER BY id LIMIT $per_page OFFSET " . (($page - 1) * $per_page));
-    $st->execute($params);
-    $rows = $st->fetchAll();
-    $filter_url = function (array $over) use ($paper, $qtext, $band, $min_price, $max_price): string {
-        $f = ['paper' => $paper, 'band' => $band];
+    $classes = ['6', '7', '8', '9-10', '11-12'];
+    if ($qtext !== '') {
+        $step = 'list';
+        $conds[] = '(title LIKE ? OR description LIKE ?)';
+        $params[] = '%' . $qtext . '%'; $params[] = '%' . $qtext . '%';
+    } elseif ($track === null) {
+        $step = 'tracks';
+    } elseif ($track === 'academic' && !in_array($class, $classes, true)) {
+        $step = 'pick';
+    } elseif ($track === 'spoken' && $edu === '') {
+        $step = 'pick';
+    } else {
+        $step = 'list';
+        $conds[] = 'track=?'; $params[] = $track;
+        if ($track === 'academic') { $conds[] = 'class_level=?'; $params[] = $class; }
+    }
+    $rows = []; $total = 0; $pages = 1;
+    $counts = [];
+    foreach (tracks() as $tr) {
+        $counts[$tr] = (int)db()->query("SELECT COUNT(*) FROM courses WHERE active=1 AND track='" . $tr . "'")->fetchColumn();
+    }
+    if ($step === 'list') {
+        $where = implode(' AND ', $conds);
+        $st = db()->prepare("SELECT COUNT(*) FROM courses WHERE $where");
+        $st->execute($params);
+        $total = (int)$st->fetchColumn();
+        $pages = max(1, (int)ceil($total / $per_page));
+        $page = min($page, $pages);
+        $st = db()->prepare("SELECT * FROM courses WHERE $where ORDER BY id LIMIT $per_page OFFSET " . (($page - 1) * $per_page));
+        $st->execute($params);
+        $rows = $st->fetchAll();
+    }
+    $list_url = function (array $over) use ($track, $class, $edu, $qtext): string {
+        $f = [];
+        if ($track) $f['track'] = $track;
+        if ($class !== '') $f['class'] = $class;
+        if ($edu !== '') $f['edu'] = $edu;
         if ($qtext !== '') $f['q'] = $qtext;
-        if ($min_price !== '') $f['min_price'] = $min_price;
-        if ($max_price !== '') $f['max_price'] = $max_price;
         foreach ($over as $k => $v) $f[$k] = $v;
-        return '/courses?' . http_build_query($f);
+        return '/courses' . ($f ? '?' . http_build_query($f) : '');
     };
-    render('courses', ['title' => 'Courses — Redway Academy', 'courses' => $rows, 'paper' => $paper,
-        'q' => $qtext, 'price_band' => $band, 'min_price' => $min_price, 'max_price' => $max_price,
-        'page' => $page, 'pages' => $pages, 'total' => $total, 'filter_url' => $filter_url]);
+    render('courses', ['title' => 'Courses — Redway Academy', 'courses' => $rows,
+        'step' => $step, 'track' => $track, 'class' => $class, 'edu' => $edu, 'q' => $qtext,
+        'classes' => $classes, 'counts' => $counts, 'page' => $page, 'pages' => $pages,
+        'total' => $total, 'list_url' => $list_url]);
 }
 if (preg_match('#^/course/(\d+)$#', $path, $m) && $method === 'GET') {
     $c = q1('SELECT * FROM courses WHERE id=?', [(int)$m[1]]);
@@ -162,8 +186,11 @@ if (preg_match('#^/course/(\d+)$#', $path, $m) && $method === 'GET') {
     $u = current_user();
     $enrolled = $u && $u['role'] === 'student' ? is_enrolled($u['phone'], (int)$c['id']) : false;
     $can_view = $enrolled || ($u && $u['role'] === 'teacher');
+    $track = (string)($c['track'] ?? 'academic');
+    $subscribed = $u && $u['role'] === 'student' ? is_subscribed($u['phone'], $track) : false;
     render('course_detail', ['title' => $c['title'] . ' — Redway Academy', 'course' => $c,
         'is_enrolled' => $enrolled, 'can_view_lessons' => $can_view,
+        'track_fee' => track_monthly_fee($track), 'is_subscribed' => $subscribed,
         'lessons' => $can_view ? q('SELECT lesson_no, title FROM lessons WHERE course_id=? ORDER BY lesson_no', [(int)$c['id']]) : []]);
 }
 // --- Lesson view: enrolled students and teachers only -----------------------
@@ -414,21 +441,31 @@ if (preg_match('#^/buy/(\d+)$#', $path, $m)) {
     $u = login_required();
     $course = q1('SELECT * FROM courses WHERE id=?', [(int)$m[1]]);
     if (!$course) abort_page(404, 'Sorry — that course does not exist.');
+    $track = (string)($course['track'] ?? 'academic');
+    $fee = track_monthly_fee($track);
+    // Plan: 'monthly' (whole track, 1 month — primary) or 'once' (this course).
+    $plan = in_array($_GET['plan'] ?? ($_POST['plan'] ?? ''), ['monthly', 'once'], true)
+        ? ($_GET['plan'] ?? $_POST['plan']) : 'monthly';
+    $amount = $plan === 'monthly' ? $fee : (int)$course['price_bdt'];
     if ($method === 'POST') {
         $trxid = strtoupper(post('trxid'));
-        if ($trxid === '') { flash(t('need_trxid')); redirect('/buy/' . $course['id']); }
+        if ($trxid === '') { flash(t('need_trxid')); redirect('/buy/' . $course['id'] . '?plan=' . $plan); }
         $sender_phone = digits_only(post('sender_phone'));
-        if (!preg_match('/^01\d{9}$/', $sender_phone)) { flash(t('need_sender')); redirect('/buy/' . $course['id']); }
+        if (!preg_match('/^01\d{9}$/', $sender_phone)) { flash(t('need_sender')); redirect('/buy/' . $course['id'] . '?plan=' . $plan); }
         $method_pay = post('method', 'bKash');
-        run('INSERT INTO orders (course_id, course_title, student_phone, student_name, method, trxid, sender_phone, amount_bdt, created_at) VALUES (?,?,?,?,?,?,?,?,?)',
-            [$course['id'], $course['title'], $u['phone'], $u['name'], $method_pay, $trxid, $sender_phone, $course['price_bdt'], now_str()]);
+        $title = $plan === 'monthly'
+            ? sprintf('%s — %s', t('monthly'), track_label($track))
+            : $course['title'];
+        run('INSERT INTO orders (course_id, course_title, student_phone, student_name, method, trxid, sender_phone, amount_bdt, plan, track, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+            [$course['id'], $title, $u['phone'], $u['name'], $method_pay, $trxid, $sender_phone, $amount, $plan, $track, now_str()]);
         foreach (q("SELECT phone FROM users WHERE role='teacher'") as $t) {
-            notify($t['phone'], "New $method_pay payment to verify: {$course['title']}, TrxID $trxid, sender $sender_phone, ৳{$course['price_bdt']}.", 'payment');
+            notify($t['phone'], "New $method_pay payment to verify: $title, TrxID $trxid, sender $sender_phone, ৳$amount.", 'payment');
         }
         flash(t('order_sent'));
         redirect('/dashboard');
     }
-    render('buy', ['title' => 'Buy — ' . $course['title'], 'course' => $course]);
+    render('buy', ['title' => 'Buy — ' . $course['title'], 'course' => $course,
+        'plan' => $plan, 'track' => $track, 'fee' => $fee, 'amount' => $amount]);
 }
 if (preg_match('#^/order/(\d+)/verify$#', $path, $m) && $method === 'POST') {
     teacher_required();
@@ -436,6 +473,10 @@ if (preg_match('#^/order/(\d+)/verify$#', $path, $m) && $method === 'POST') {
     run('UPDATE orders SET status=? WHERE id=?', [$status, (int)$m[1]]);
     $row = q1('SELECT * FROM orders WHERE id=?', [(int)$m[1]]);
     if ($row) {
+        // A verified monthly subscription runs 30 days from verification.
+        if ($status === 'verified' && ($row['plan'] ?? 'once') === 'monthly' && empty($row['valid_until'])) {
+            run('UPDATE orders SET valid_until=? WHERE id=?', [date('Y-m-d', strtotime('+30 days')), (int)$m[1]]);
+        }
         notify($row['student_phone'], "Your payment for {$row['course_title']} was $status (TrxID {$row['trxid']}).", 'payment');
         notify_parents_of($row['student_phone'], "Payment for {$row['student_name']} — {$row['course_title']} — was $status.", 'payment');
     }
@@ -457,6 +498,12 @@ function verify_retake(array $form, string $admit, string $tab): array {
         : ['auto_verified', 'All required fields and both files were present and matched the form.'];
 }
 if ($path === '/retake') {
+    // The free retake is a campaign: when the admin switches it off, the
+    // form closes and visitors see a "not running right now" message.
+    if ($method === 'POST' && !retake_campaign_active()) {
+        flash(t('retake_off_title'));
+        redirect('/retake');
+    }
     if ($method === 'POST') {
         $admit = store_upload($_FILES['admit_card'] ?? []);
         $tab = store_upload($_FILES['tabulation'] ?? []);
@@ -473,7 +520,8 @@ if ($path === '/retake') {
         flash(sprintf(t('retake_sent'), str_replace('_', ' ', $status), $reasons));
         redirect('/retake/' . $id);
     }
-    render('retake', ['title' => 'Free Retake Registration — Redway Academy']);
+    render('retake', ['title' => 'Free Retake Registration — Redway Academy',
+        'campaign_off' => !retake_campaign_active()]);
 }
 if (preg_match('#^/retake/(\d+)$#', $path, $m) && $method === 'GET') {
     $row = q1('SELECT * FROM retake_registrations WHERE id=?', [(int)$m[1]]);
@@ -570,6 +618,22 @@ if ($path === '/admin' && $method === 'GET') {
         'recent_retakes' => q('SELECT * FROM retake_registrations ORDER BY id DESC LIMIT 5'),
         'recent_feedback' => q('SELECT * FROM feedback ORDER BY id DESC LIMIT 5')]);
 }
+if ($path === '/admin/settings') {
+    admin_required();
+    if ($method === 'POST') {
+        setting_set('subscription_fee_live', (string)max(0, (int)post('fee_live')));
+        setting_set('recorded_fee', (string)max(0, (int)post('fee_recorded')));
+        setting_set('live_days_per_week', (string)min(7, max(1, (int)post('live_days'))));
+        setting_set('retake_campaign_active', isset($_POST['retake_campaign']) ? '1' : '0');
+        flash(t('settings_saved'));
+        redirect('/admin/settings');
+    }
+    render('admin/settings', ['title' => 'Admin — Settings',
+        'fee_live' => track_monthly_fee('academic'),
+        'fee_recorded' => recorded_fee(),
+        'live_days' => live_days_per_week(),
+        'retake_active' => retake_campaign_active()]);
+}
 if ($path === '/admin/courses' && $method === 'GET') {
     admin_required();
     render('admin/courses', ['title' => 'Admin — Courses', 'courses' => q('SELECT * FROM courses ORDER BY id')]);
@@ -577,8 +641,9 @@ if ($path === '/admin/courses' && $method === 'GET') {
 if ($path === '/admin/courses/new') {
     admin_required();
     if ($method === 'POST') {
-        run('INSERT INTO courses (title, class_level, paper, price_bdt, lessons, description, active) VALUES (?,?,?,?,?,?,1)',
-            [post('title'), post('class_level'), post('paper', '1st Paper'), (int)post('price_bdt'), (int)post('lessons'), post('description')]);
+        $track = in_array(post('track'), ['academic', 'spoken'], true) ? post('track') : 'academic';
+        run('INSERT INTO courses (title, class_level, paper, track, price_bdt, lessons, description, active) VALUES (?,?,?,?,?,?,?,1)',
+            [post('title'), post('class_level'), post('paper', '1st Paper'), $track, (int)post('price_bdt'), (int)post('lessons'), post('description')]);
         flash('Course created.');
         redirect('/admin/courses');
     }
@@ -589,8 +654,9 @@ if (preg_match('#^/admin/courses/(\d+)/edit$#', $path, $m)) {
     $course = q1('SELECT * FROM courses WHERE id=?', [(int)$m[1]]);
     if (!$course) abort_page(404, 'Course not found.');
     if ($method === 'POST') {
-        run('UPDATE courses SET title=?, class_level=?, paper=?, price_bdt=?, lessons=?, description=?, active=? WHERE id=?',
-            [post('title'), post('class_level'), post('paper', '1st Paper'), (int)post('price_bdt'), (int)post('lessons'), post('description'), isset($_POST['active']) ? 1 : 0, (int)$m[1]]);
+        $track = in_array(post('track'), ['academic', 'spoken'], true) ? post('track') : 'academic';
+        run('UPDATE courses SET title=?, class_level=?, paper=?, track=?, price_bdt=?, lessons=?, description=?, active=? WHERE id=?',
+            [post('title'), post('class_level'), post('paper', '1st Paper'), $track, (int)post('price_bdt'), (int)post('lessons'), post('description'), isset($_POST['active']) ? 1 : 0, (int)$m[1]]);
         flash('Course updated.');
         redirect('/admin/courses');
     }
@@ -662,6 +728,10 @@ if (preg_match('#^/admin/orders/(\d+)/verify$#', $path, $m) && $method === 'POST
     run('UPDATE orders SET status=? WHERE id=?', [$status, (int)$m[1]]);
     $row = q1('SELECT * FROM orders WHERE id=?', [(int)$m[1]]);
     if ($row) {
+        // A verified monthly subscription runs 30 days from verification.
+        if ($status === 'verified' && ($row['plan'] ?? 'once') === 'monthly' && empty($row['valid_until'])) {
+            run('UPDATE orders SET valid_until=? WHERE id=?', [date('Y-m-d', strtotime('+30 days')), (int)$m[1]]);
+        }
         notify($row['student_phone'], "Your payment for {$row['course_title']} was $status (TrxID {$row['trxid']}).", 'payment');
         notify_parents_of($row['student_phone'], "Payment for {$row['student_name']} — {$row['course_title']} — was $status.", 'payment');
     }

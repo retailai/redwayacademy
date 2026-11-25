@@ -10,12 +10,12 @@
       <p class="lead"><?= t('hero_intro') ?></p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="/courses"><?= t('cta_courses') ?></a>
-        <a class="btn btn-secondary" href="/retake"><?= t('cta_retake') ?></a>
+        <?php if (!empty($retake_active)): ?><a class="btn btn-secondary" href="/retake"><?= t('cta_retake') ?></a><?php endif; ?>
       </div>
       <div class="proof" aria-label="Redway Academy at a glance">
         <div><b><?= num(11) ?></b><span><?= t('stat_courses') ?></span></div>
         <div><b><?= num('6') ?>–<?= num(12) ?></b><span><?= t('stat_classes') ?></span></div>
-        <div><b><?= tk(699) ?></b><span><?= t('stat_starting') ?></span></div>
+        <div><b><?= tk(track_monthly_fee('academic')) ?></b><span><?= t('stat_monthly') ?></span></div>
         <div><b><?= num(3) ?></b><span><?= t('stat_logins') ?></span></div>
       </div>
     </div>
@@ -91,9 +91,9 @@
 <section aria-labelledby="path-heading">
   <div class="section-head"><div><h2 id="path-heading"><?= t('path_title') ?></h2><p><?= t('path_sub') ?></p></div></div>
   <div class="grid">
-    <div class="card"><h3><?= t('path1_t') ?></h3><p><?= t('path1_d') ?></p><div class="card-actions"><a class="btn btn-secondary" href="/courses?paper=1st+Paper"><?= t('details') ?></a></div></div>
-    <div class="card"><h3><?= t('path2_t') ?></h3><p><?= t('path2_d') ?></p><div class="card-actions"><a class="btn btn-secondary" href="/courses?paper=2nd+Paper"><?= t('details') ?></a></div></div>
-    <div class="card"><h3><?= t('path3_t') ?></h3><p><?= t('path3_d') ?></p><div class="card-actions"><a class="btn btn-secondary" href="/courses?paper=Spoken+English"><?= t('details') ?></a></div></div>
+    <div class="card"><h3><?= t('path1_t') ?></h3><p><?= t('path1_d') ?></p><div class="card-actions"><a class="btn btn-secondary" href="/courses?track=academic"><?= t('details') ?></a></div></div>
+    <div class="card"><h3><?= t('path2_t') ?></h3><p><?= t('path2_d') ?></p><div class="card-actions"><a class="btn btn-secondary" href="/courses?track=academic"><?= t('details') ?></a></div></div>
+    <div class="card"><h3><?= t('path3_t') ?></h3><p><?= t('path3_d') ?></p><div class="card-actions"><a class="btn btn-secondary" href="/courses?track=spoken"><?= t('details') ?></a></div></div>
   </div>
 </section>
 

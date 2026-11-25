@@ -38,20 +38,22 @@ function db_driver(): string {
     return str_starts_with(db_dsn(), 'sqlite:') ? 'sqlite' : 'mysql';
 }
 
-/** The 11 seeded courses: Class 6,7,8,9-10,11-12 x 1st/2nd Paper + Spoken English. */
+/** The 11 seeded courses: Class 6,7,8,9-10,11-12 x 1st/2nd Paper + Spoken English.
+ * 7th element is the track: 'academic' (English for Today + Grammar &
+ * Composition together) or 'spoken' (Spoken English — for all). */
 function seed_courses(): array {
     return [
-        ['English for Today — Class 6 (1st Paper)', '6', '1st Paper', 699, 20, 'NCTB English for Today, Class 6: reading, vocabulary, speaking and writing.'],
-        ['English 2nd Paper — Class 6 (Grammar and Composition)', '6', '2nd Paper', 699, 20, 'NCTB English Grammar and Composition, Class 6: nouns, verbs, tenses and sentences.'],
-        ['English for Today — Class 7 (1st Paper)', '7', '1st Paper', 699, 20, 'NCTB English for Today, Class 7: reading, vocabulary, speaking and writing.'],
-        ['English 2nd Paper — Class 7 (Grammar and Composition)', '7', '2nd Paper', 699, 20, 'NCTB English Grammar and Composition, Class 7: grammar rules, practice and writing.'],
-        ['English for Today — Class 8 (1st Paper)', '8', '1st Paper', 799, 22, 'NCTB English for Today, Class 8: reading, vocabulary, speaking and writing.'],
-        ['English 2nd Paper — Class 8 (Grammar and Composition)', '8', '2nd Paper', 799, 22, 'NCTB English Grammar and Composition, Class 8: grammar rules, practice and writing.'],
-        ['English for Today — Class 9-10 (1st Paper)', '9-10', '1st Paper', 999, 24, 'NCTB English for Today, Classes 9-10 (SSC): seen, unseen, literature and writing.'],
-        ['English 2nd Paper — Class 9-10 (Grammar and Composition)', '9-10', '2nd Paper', 999, 24, 'NCTB English Grammar and Composition, Classes 9-10 (SSC): The Noun, Tenses, Modals, Conditionals, Passive, Speech, plus Letters, CV, E-mails, Paragraphs, Completing Stories, Graphs & Charts.'],
-        ['English for Today — Class 11-12 (1st Paper)', '11-12', '1st Paper', 1199, 24, 'NCTB English for Today, Classes 11-12 (HSC, 1st Paper): reading and writing.'],
-        ['English 2nd Paper — Class 11-12 (Grammar and Composition)', '11-12', '2nd Paper', 1199, 24, 'NCTB Grammar & Composition, Classes 11-12 (HSC, 2nd Paper): grammar and writing.'],
-        ['Spoken English — Speak with Confidence', '6-12', 'Spoken English', 1499, 24, "Redway's own speaking course: conversation, pronunciation, fluency, group discussion, presentations and interview English, with teacher feedback."],
+        ['English for Today — Class 6 (1st Paper)', '6', '1st Paper', 699, 20, 'NCTB English for Today, Class 6: reading, vocabulary, speaking and writing.', 'academic'],
+        ['English 2nd Paper — Class 6 (Grammar and Composition)', '6', '2nd Paper', 699, 20, 'NCTB English Grammar and Composition, Class 6: nouns, verbs, tenses and sentences.', 'academic'],
+        ['English for Today — Class 7 (1st Paper)', '7', '1st Paper', 699, 20, 'NCTB English for Today, Class 7: reading, vocabulary, speaking and writing.', 'academic'],
+        ['English 2nd Paper — Class 7 (Grammar and Composition)', '7', '2nd Paper', 699, 20, 'NCTB English Grammar and Composition, Class 7: grammar rules, practice and writing.', 'academic'],
+        ['English for Today — Class 8 (1st Paper)', '8', '1st Paper', 799, 22, 'NCTB English for Today, Class 8: reading, vocabulary, speaking and writing.', 'academic'],
+        ['English 2nd Paper — Class 8 (Grammar and Composition)', '8', '2nd Paper', 799, 22, 'NCTB English Grammar and Composition, Class 8: grammar rules, practice and writing.', 'academic'],
+        ['English for Today — Class 9-10 (1st Paper)', '9-10', '1st Paper', 999, 24, 'NCTB English for Today, Classes 9-10 (SSC): seen, unseen, literature and writing.', 'academic'],
+        ['English 2nd Paper — Class 9-10 (Grammar and Composition)', '9-10', '2nd Paper', 999, 24, 'NCTB English Grammar and Composition, Classes 9-10 (SSC): The Noun, Tenses, Modals, Conditionals, Passive, Speech, plus Letters, CV, E-mails, Paragraphs, Completing Stories, Graphs & Charts.', 'academic'],
+        ['English for Today — Class 11-12 (1st Paper)', '11-12', '1st Paper', 1199, 24, 'NCTB English for Today, Classes 11-12 (HSC, 1st Paper): reading and writing.', 'academic'],
+        ['English 2nd Paper — Class 11-12 (Grammar and Composition)', '11-12', '2nd Paper', 1199, 24, 'NCTB Grammar & Composition, Classes 11-12 (HSC, 2nd Paper): grammar and writing.', 'academic'],
+        ['Spoken English — Speak with Confidence', '6-12', 'Spoken English', 1499, 24, "Redway's own speaking course: conversation, pronunciation, fluency, group discussion, presentations and interview English, with teacher feedback.", 'spoken'],
     ];
 }
 
@@ -67,7 +69,7 @@ function init_db(PDO $pdo): void {
 
     $tables = [
         "CREATE TABLE IF NOT EXISTS users (id $ai, name $txt NOT NULL, phone {$vc(20)} NOT NULL UNIQUE, password_hash $txt NOT NULL, role {$vc(20)} NOT NULL, class_level {$vc(20)}, linked_student_phone {$vc(20)}, active $bool NOT NULL DEFAULT 1, is_super_admin $bool NOT NULL DEFAULT 0, created_at $ts)",
-        "CREATE TABLE IF NOT EXISTS courses (id $ai, title $txt NOT NULL, class_level {$vc(20)}, paper {$vc(30)}, price_bdt $int, lessons $int, description $txt, active $bool NOT NULL DEFAULT 1)",
+        "CREATE TABLE IF NOT EXISTS courses (id $ai, title $txt NOT NULL, class_level {$vc(20)}, paper {$vc(30)}, track {$vc(20)} NOT NULL DEFAULT 'academic', price_bdt $int, lessons $int, description $txt, active $bool NOT NULL DEFAULT 1)",
         "CREATE TABLE IF NOT EXISTS homework (id $ai, title $txt NOT NULL, class_level {$vc(20)}, details $txt, teacher_phone {$vc(20)}, created_at $ts)",
         "CREATE TABLE IF NOT EXISTS submissions (id $ai, homework_id $int, student_phone {$vc(20)}, student_name $txt, answer $txt, file_link $txt, status {$vc(20)} DEFAULT 'submitted', teacher_comment $txt, created_at $ts)",
         "CREATE TABLE IF NOT EXISTS progress_notes (id $ai, student_phone {$vc(20)}, student_name $txt, score $int, suggestion $txt, teacher_phone {$vc(20)}, created_at $ts)",
@@ -85,11 +87,14 @@ function init_db(PDO $pdo): void {
         // Persistent "remember me" logins: selector + hashed validator, 30 days.
         // The validator itself is never stored — only its HMAC-SHA256 hash.
         "CREATE TABLE IF NOT EXISTS remember_tokens (id $ai, user_id $int NOT NULL, selector {$vc(32)} NOT NULL UNIQUE, token_hash $txt NOT NULL, expires_at $int NOT NULL, created_at $int NOT NULL)",
+        // Key-value settings: monthly subscription fees per track and the
+        // free-retake campaign switch. Editable from the Admin Panel.
+        "CREATE TABLE IF NOT EXISTS settings (k {$vc(64)} NOT NULL PRIMARY KEY, v $txt)",
     ];
     foreach ($tables as $sql) $pdo->exec($sql);
 
     // Light migrations for databases created by an earlier version.
-    $cols = ['users' => ['active', 'is_super_admin'], 'courses' => ['active'], 'testimonials' => ['status'], 'orders' => ['sender_phone']];
+    $cols = ['users' => ['active', 'is_super_admin'], 'courses' => ['active', 'track'], 'testimonials' => ['status'], 'orders' => ['sender_phone', 'plan', 'track', 'valid_until']];
     foreach ($cols as $table => $names) {
         $existing = [];
         if ($mysql) {
@@ -102,15 +107,42 @@ function init_db(PDO $pdo): void {
                 $def = $name === 'status' ? "TEXT DEFAULT 'approved'" : ($mysql ? 'TINYINT(1) NOT NULL DEFAULT 1' : 'INTEGER NOT NULL DEFAULT 1');
                 if ($name === 'is_super_admin') $def = $mysql ? 'TINYINT(1) NOT NULL DEFAULT 0' : 'INTEGER NOT NULL DEFAULT 0';
                 if ($name === 'sender_phone') $def = $mysql ? 'VARCHAR(20)' : 'TEXT';
+                if ($name === 'track') $def = $mysql ? "VARCHAR(20) NOT NULL DEFAULT 'academic'" : "TEXT NOT NULL DEFAULT 'academic'";
+                if ($name === 'plan') $def = $mysql ? "VARCHAR(20) NOT NULL DEFAULT 'once'" : "TEXT NOT NULL DEFAULT 'once'";
+                if ($name === 'valid_until') $def = $mysql ? 'VARCHAR(20)' : 'TEXT';
                 $pdo->exec("ALTER TABLE `$table` ADD COLUMN `$name` $def");
             }
+        }
+    }
+
+    // Backfill the track for courses created before the track column existed.
+    $pdo->exec("UPDATE courses SET track='spoken' WHERE paper='Spoken English' AND (track IS NULL OR track='')");
+    $pdo->exec("UPDATE courses SET track='academic' WHERE track IS NULL OR track=''");
+
+    // Seed the settings defaults (only when the key is missing — an admin's
+    // saved values are never overwritten). The live monthly fee is ৳1450
+    // (live classes 3 days a week on Google Meet / Zoom); the recorded
+    // class fee is not set yet (0 = not set) — the owner fills it in later
+    // from the Admin Panel.
+    $seed_settings = [
+        'subscription_fee_live' => '1450',
+        'recorded_fee' => '0',
+        'live_days_per_week' => '3',
+        'retake_campaign_active' => '1',
+    ];
+    foreach ($seed_settings as $k => $v) {
+        $st = $pdo->prepare('SELECT COUNT(*) FROM settings WHERE k=?');
+        $st->execute([$k]);
+        if ((int)$st->fetchColumn() === 0) {
+            $ins = $pdo->prepare('INSERT INTO settings (k, v) VALUES (?,?)');
+            $ins->execute([$k, $v]);
         }
     }
 
     // Seed courses once.
     $count = (int)$pdo->query('SELECT COUNT(*) FROM courses')->fetchColumn();
     if ($count === 0) {
-        $st = $pdo->prepare('INSERT INTO courses (title, class_level, paper, price_bdt, lessons, description) VALUES (?,?,?,?,?,?)');
+        $st = $pdo->prepare('INSERT INTO courses (title, class_level, paper, price_bdt, lessons, description, track) VALUES (?,?,?,?,?,?,?)');
         foreach (seed_courses() as $c) $st->execute($c);
     }
     // Seed lessons once (only when the lessons table is empty).

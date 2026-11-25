@@ -44,6 +44,7 @@ function render(string $view, array $vars = []): void {
     $vars['unread_count'] = $unread;
     $vars['csrf_token'] = csrf_token();
     $vars['is_super_admin'] = $user ? is_super_admin($user) : false;
+    $vars['retake_active'] = retake_campaign_active();
     $vars['subdomain_role'] = function_exists('site_host_role') ? site_host_role() : null;
     extract($vars);
     $view_file = __DIR__ . '/../templates/' . $view . '.php';
@@ -75,16 +76,81 @@ function thumb_letter(array $c): string {
     return mb_strtoupper(mb_substr($t, 0, 1, 'UTF-8'), 'UTF-8');
 }
 
-/** Enrollment: a verified bKash/Nagad order IS the enrollment. */
+/** Key-value settings (monthly fees, campaign switches). Defaults are
+ * seeded in init_db(); an admin's saved value is never overwritten. */
+function setting_get(string $key, string $default = ''): string {
+    $st = db()->prepare('SELECT v FROM settings WHERE k=?');
+    $st->execute([$key]);
+    $r = $st->fetch();
+    return $r ? (string)$r['v'] : $default;
+}
+function setting_set(string $key, string $value): void {
+    if (db_driver() === 'mysql') {
+        $st = db()->prepare('INSERT INTO settings (k, v) VALUES (?,?) ON DUPLICATE KEY UPDATE v=VALUES(v)');
+        $st->execute([$key, $value]);
+    } else {
+        $st = db()->prepare('INSERT INTO settings (k, v) VALUES (?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v');
+        $st->execute([$key, $value]);
+    }
+}
+/** Monthly subscription fee (৳/month): live classes, 3 days a week on
+ * Google Meet / Zoom. One fee for both tracks: ৳1450. */
+function track_monthly_fee(string $track): int {
+    return max(0, (int)setting_get('subscription_fee_live', '1450'));
+}
+/** Recorded-class fee (৳). 0 means "not set yet" — decided later by the owner. */
+function recorded_fee(): int {
+    return max(0, (int)setting_get('recorded_fee', '0'));
+}
+/** Live class days per week (admin-editable, default 3). */
+function live_days_per_week(): int {
+    $d = (int)setting_get('live_days_per_week', '3');
+    return min(7, max(1, $d));
+}
+/** Bilingual live-class schedule line, built from the stored days setting
+ * so it updates when the admin changes the days. */
+function live_class_text(): string {
+    return sprintf(t('live_class'), num(live_days_per_week()));
+}
+/** Bilingual track name. */
+function track_label(string $track): string {
+    return $track === 'spoken' ? t('track_spoken') : t('track_academic');
+}
+/** The two tracks, in display order. */
+function tracks(): array { return ['academic', 'spoken']; }
+/** Free SSC/HSC retake is a campaign: on by default, flippable in Admin Panel. */
+function retake_campaign_active(): bool {
+    return setting_get('retake_campaign_active', '1') === '1';
+}
+
+/** Enrollment: a verified bKash/Nagad order IS the enrollment.
+ * A verified monthly subscription also enrols the student in EVERY course
+ * of that track until its valid_until date (30 days from verification). */
+function is_subscribed(string $phone, string $track): bool {
+    $st = db()->prepare("SELECT COUNT(*) FROM orders WHERE student_phone=? AND plan='monthly' AND track=? AND status='verified' AND valid_until IS NOT NULL AND valid_until<>'' AND valid_until>=?");
+    $st->execute([$phone, $track, date('Y-m-d')]);
+    return (int)$st->fetchColumn() > 0;
+}
+function subscription_until(string $phone, string $track): string {
+    $st = db()->prepare("SELECT MAX(valid_until) FROM orders WHERE student_phone=? AND plan='monthly' AND track=? AND status='verified'");
+    $st->execute([$phone, $track]);
+    return (string)($st->fetchColumn() ?: '');
+}
 function is_enrolled(string $phone, int $course_id): bool {
     $st = db()->prepare("SELECT COUNT(*) FROM orders WHERE student_phone=? AND course_id=? AND status='verified'");
     $st->execute([$phone, $course_id]);
-    return (int)$st->fetchColumn() > 0;
+    if ((int)$st->fetchColumn() > 0) return true;
+    $c = db()->prepare('SELECT track FROM courses WHERE id=?');
+    $c->execute([$course_id]);
+    $row = $c->fetch();
+    if (!$row) return false;
+    return is_subscribed($phone, (string)($row['track'] ?? 'academic'));
 }
-/** Verified courses for a phone, most recent first. */
+/** Verified courses for a phone, most recent first (one-time orders plus
+ * every course of any actively subscribed track). */
 function enrolled_courses(string $phone): array {
-    $st = db()->prepare("SELECT DISTINCT c.* FROM courses c JOIN orders o ON o.course_id=c.id WHERE o.student_phone=? AND o.status='verified' ORDER BY o.id DESC");
-    $st->execute([$phone]);
+    $st = db()->prepare("SELECT DISTINCT c.* FROM courses c WHERE c.id IN (SELECT course_id FROM orders WHERE student_phone=? AND status='verified') OR c.track IN (SELECT track FROM orders WHERE student_phone=? AND plan='monthly' AND status='verified' AND valid_until IS NOT NULL AND valid_until<>'' AND valid_until>=?) ORDER BY c.id");
+    $st->execute([$phone, $phone, date('Y-m-d')]);
     return $st->fetchAll();
 }
 

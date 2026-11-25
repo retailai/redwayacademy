@@ -46,9 +46,11 @@ section{margin-top:40px}
 .section-head p{margin:4px 0 0;color:var(--muted)}
 .section-lead{color:var(--muted);font-size:17px}
 
-/* --- Announcement strip --- */
-.announce{background:var(--blue-dark);color:#fff;text-align:center;font-weight:600;font-size:14px;padding:10px 16px}
+/* --- Announcement strip (dismissible; hidden when the retake campaign is off) --- */
+.announce{position:relative;background:var(--blue-dark);color:#fff;text-align:center;font-weight:600;font-size:14px;padding:10px 44px 10px 16px}
 .announce a{color:#fff;text-decoration:underline}
+.announce-close{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:0;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-height:32px;line-height:1}
+.announce-close:hover{background:rgba(255,255,255,.32)}
 
 /* --- Header: logo | search | pill nav | lang + bell + avatar --- */
 .site-header{position:sticky;top:0;z-index:var(--z-header);background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--line-soft)}
@@ -80,12 +82,62 @@ section{margin-top:40px}
 .avatar-dropdown .who{padding:8px 12px;border-bottom:1px solid var(--line-soft);margin-bottom:4px}
 .avatar-dropdown .who b{display:block}
 .avatar-dropdown .who span{color:var(--muted);font-size:13px}
+/* --- Compact mobile header (Learning Bangladesh style): one short top row
+   (small logo, language, bell, avatar), a compact search row, then a
+   horizontally scrollable nav pill row. Content starts right below.
+   On scroll the header shrinks to a mini-bar (search row hides). --- */
 @media(max-width:900px){
-  .header-row{gap:10px;padding:10px 16px}
+  .container{padding:0 16px 40px}
+  .announce{font-size:13px;padding:8px 40px 8px 12px}
+  .header-row{gap:8px;padding:8px 12px}
+  .brand-logo{padding:4px 8px;border-radius:10px}
+  .brand-logo img{height:32px}
+  .header-right{gap:6px}
+  .header-right .btn{padding:10px 14px;min-height:40px;font-size:14px}
+  .lang-switch a{min-height:40px;padding:6px 10px;font-size:13px}
+  .avatar-btn{padding:4px;min-height:40px}
+  .avatar-btn .avatar-name{display:none}
+  .avatar-circle{width:32px;height:32px}
+  .bell{width:40px;height:40px}
   .header-search{order:3;flex-basis:100%;max-width:none}
+  .header-search input,.header-search button{min-height:40px}
   .main-nav{order:4;flex-basis:100%;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
-  .main-nav a{flex-shrink:0}
+  .main-nav::-webkit-scrollbar{display:none}
+  .main-nav a{flex-shrink:0;min-height:40px;padding:6px 12px;font-size:14px}
+  /* Shrunk mini-bar while scrolling: search row hides, logo gets smaller. */
+  .site-header.scrolled .header-search{display:none}
+  .site-header.scrolled .header-row{padding-top:6px;padding-bottom:6px}
+  .site-header.scrolled .brand-logo img{height:28px}
+  .crumb{margin:16px 0 4px}
+  .hero{padding:16px 0 0}
+  section{margin-top:28px}
 }
+
+/* --- Two-track picker --- */
+.track-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
+@media(max-width:640px){.track-grid{grid-template-columns:1fr}}
+.track-card{padding:24px}
+.track-card h2{margin:12px 0 6px;font-size:24px}
+.track-card p{margin:0 0 8px;color:var(--muted)}
+.track-letter{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;color:#fff;font-family:"Baloo Da 2",sans-serif;font-size:28px;font-weight:800}
+.track-academic .track-letter{background:var(--blue)}
+.track-spoken .track-letter{background:var(--green)}
+.track-fee{font-size:22px;color:var(--ink)}
+.track-fee strong{font-family:"Baloo Da 2",sans-serif}
+.track-live{font-size:14px;font-weight:600;color:var(--green-dark)}
+.track-count{font-size:14px}
+.track-card .btn{margin-top:12px;width:100%}
+
+/* --- Buy page: plan options (radio cards) --- */
+.plan-options{display:grid;gap:10px;margin:12px 0 8px}
+.plan-option{display:flex;flex-direction:column;gap:2px;border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;cursor:pointer;background:#fff}
+.plan-option.selected{border-color:var(--blue);background:var(--blue-soft)}
+.plan-option input{width:18px;height:18px;accent-color:var(--blue);flex:none;margin:0 0 4px}
+.plan-option .plan-name{font-weight:800;font-size:17px}
+.plan-option .plan-desc{color:var(--muted);font-size:14px;font-weight:400}
+.live-line{color:var(--muted);font-size:13px;margin:4px 0 0}
+.once-line{color:var(--muted);font-size:13px;margin:2px 0 0}
+.course-thumb{text-decoration:none}
 
 /* --- Hero: two columns, big bold headline with coloured highlight --- */
 .hero{padding:32px 0 0}
