@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="{{ url_for('admin_dashboard') }}">← Admin Panel</a></p>
+<h1>Homework</h1>
+<h2>All homework</h2>
+{% for h in homework %}
+<div class="card"><h3>{{ h.title }}</h3><p>Class {{ h.class_level }} — {{ h.details }} <small>({{ h.created_at }})</small></p>
+<p><a href="{{ url_for('admin_homework_edit', hw_id=h.id) }}">Edit</a>
+<form method="post" action="{{ url_for('admin_homework_delete', hw_id=h.id) }}" style="display:inline" onsubmit="return confirm('Delete this homework?')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit">Delete</button></form></p></div>
+{% else %}<p>No homework yet. Create it from the <a href="{{ url_for('homework') }}">Homework page</a>.</p>{% endfor %}
+<h2>Submissions to review</h2>
+{% for s in submissions %}
+<p><strong>{{ s.student_name }}</strong> ({{ s.student_phone }}) — {{ s.answer }} — <strong>{{ s.status }}</strong>
+{% if s.teacher_comment %} — "{{ s.teacher_comment }}"{% endif %}
+<form method="post" action="{{ url_for('review_submission', sub_id=s.id) }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input name="teacher_comment" placeholder="Comment"><button name="status" value="checked">Checked</button><button name="status" value="needs work">Needs work</button></form></p>
+{% else %}<p>No submissions yet.</p>{% endfor %}
+{% endblock %}

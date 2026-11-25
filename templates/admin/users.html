@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="{{ url_for('admin_dashboard') }}">← Admin Panel</a></p>
+<h1>Manage Users</h1>
+<p>Only the Super Admin can change a role or deactivate an account.</p>
+<table class="admintable">
+<tr><th>Name</th><th>Phone</th><th>Role</th><th>Class</th><th>Linked student</th><th>Status</th><th>Actions</th></tr>
+{% for u in users %}
+<tr><td><strong>{{ u.name }}</strong>{% if u.is_super_admin %} <span class="badge green">Super Admin</span>{% endif %}</td><td>{{ u.phone }}</td><td>{{ u.role }}</td><td>{{ u.class_level or '' }}</td><td>{{ u.linked_student_phone or '' }}</td><td>{% if u.active %}✅ Active{% else %}❌ Deactivated{% endif %}</td>
+<td>
+{% if is_super_admin %}
+<form method="post" action="{{ url_for('admin_user_role', user_id=u.id) }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><select name="role"><option value="student" {% if u.role == 'student' %}selected{% endif %}>Student</option><option value="parent" {% if u.role == 'parent' %}selected{% endif %}>Parent</option><option value="teacher" {% if u.role == 'teacher' %}selected{% endif %}>Teacher</option></select><button type="submit">Set role</button></form>
+<form method="post" action="{{ url_for('admin_user_toggle', user_id=u.id) }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit">{% if u.active %}Deactivate{% else %}Activate{% endif %}</button></form>
+{% else %}<small>Super Admin only</small>{% endif %}
+</td></tr>
+{% else %}<tr><td colspan="7">No users yet.</td></tr>{% endfor %}
+</table>
+<p><a class="btn" href="{{ url_for('admin_teachers') }}">Add Teacher Account</a></p>
+{% endblock %}

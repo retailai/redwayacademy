@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<nav class="adminnav">
+  <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+  <a href="{{ url_for('admin_courses') }}">Courses</a>
+  <a href="{{ url_for('admin_users') }}">Users</a>
+  <a href="{{ url_for('admin_homework') }}">Homework</a>
+  <a href="{{ url_for('admin_orders') }}">Orders</a>
+  <a href="{{ url_for('admin_retakes') }}">Retakes</a>
+  <a href="{{ url_for('admin_testimonials') }}">Reviews</a>
+  <a href="{{ url_for('admin_progress') }}">Progress</a>
+  <a href="{{ url_for('admin_notifications') }}">Notify</a>
+  <a href="{{ url_for('admin_checkins') }}">Check-in</a>
+  <a href="{{ url_for('admin_teachers') }}">Teachers</a>
+</nav>
+<h1>Admin Panel — Redway Academy</h1>
+<p>Logged in as <strong>{{ user.name }}</strong> ({{ user.phone }}) — Teacher / Admin
+{% if is_super_admin %} • <span class="badge green">Super Admin</span>{% endif %}</p>
+<div class="grid">
+  <div class="card"><h3>Users</h3><p><strong>{{ counts.users }}</strong> total — {{ counts.students }} students, {{ counts.parents }} parents, {{ counts.teachers }} teachers</p><p><a href="{{ url_for('admin_users') }}">Manage users →</a></p></div>
+  <div class="card"><h3>Courses</h3><p><strong>{{ counts.courses }}</strong> active courses</p><p><a href="{{ url_for('admin_courses') }}">Manage courses →</a></p></div>
+  <div class="card"><h3>Orders</h3><p><strong>{{ counts.orders_pending }}</strong> pending bKash / Nagad payments ({{ counts.orders_total }} total)</p><p><a href="{{ url_for('admin_orders') }}">Verify payments →</a></p></div>
+  <div class="card"><h3>Homework</h3><p><strong>{{ counts.submissions_pending }}</strong> submissions waiting for review</p><p><a href="{{ url_for('admin_homework') }}">Review homework →</a></p></div>
+  <div class="card"><h3>Retake registrations</h3><p><strong>{{ counts.retakes_pending }}</strong> need review</p><p><a href="{{ url_for('admin_retakes') }}">Review retakes →</a></p></div>
+  <div class="card"><h3>Reviews</h3><p><strong>{{ counts.testimonials_pending }}</strong> endorsements waiting for approval</p><p><a href="{{ url_for('admin_testimonials') }}">Approve reviews →</a></p></div>
+  <div class="card"><h3>Check-ins</h3><p><strong>{{ counts.checkins_pending }}</strong> arrivals waiting for confirmation</p><p><a href="{{ url_for('admin_checkins') }}">Confirm arrivals →</a></p></div>
+  <div class="card"><h3>Quick actions</h3><p><a class="btn" href="{{ url_for('admin_course_new') }}">+ New course</a> <a class="btn yellow" href="{{ url_for('admin_notifications') }}">Send announcement</a></p></div>
+</div>
+<h2>Recent orders</h2>
+{% for o in recent_orders %}<p>{{ o.course_title }} — {{ o.student_name }} — {{ o.method }}, TrxID {{ o.trxid }} — <strong>{{ o.status }}</strong></p>{% else %}<p>No orders yet.</p>{% endfor %}
+<h2>Recent retake registrations</h2>
+{% for r in recent_retakes %}<p>{{ r.student_name }} — {{ r.exam }} {{ r.exam_year }}, Roll {{ r.roll_no }} — <strong>{{ r.status }}</strong></p>{% else %}<p>No retake registrations yet.</p>{% endfor %}
+<h2>Recent feedback</h2>
+{% for f in recent_feedback %}<p>"{{ f.message }}" — {{ f.author_name }}</p>{% else %}<p>No feedback yet.</p>{% endfor %}
+{% endblock %}

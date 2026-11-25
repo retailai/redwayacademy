@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="{{ url_for('admin_dashboard') }}">← Admin Panel</a></p>
+<h1>Send Notification / Announcement</h1>
+<form method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<label>Message <textarea name="message" required placeholder="e.g. Tomorrow's Class 9-10 English class starts at 4pm."></textarea></label>
+<label>Send to <select name="audience"><option value="all">Everyone (all users)</option><option value="student">Students only</option><option value="parent">Parents only</option><option value="teacher">Teachers only</option><option value="class">One class (enter class below)</option></select></label>
+<label>Class (only for "One class") <input name="class_level" placeholder="6, 7, 8, 9-10 or 11-12"></label>
+<button class="btn" type="submit">Send notification</button>
+</form>
+<h2>Recent announcements</h2>
+{% for a in announcements %}<p>"{{ a.message }}" <small>({{ a.created_at }})</small></p>{% else %}<p>No announcements yet.</p>{% endfor %}
+{% endblock %}

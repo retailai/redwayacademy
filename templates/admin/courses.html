@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="{{ url_for('admin_dashboard') }}">← Admin Panel</a></p>
+<h1>Manage Courses</h1>
+<p><a class="btn" href="{{ url_for('admin_course_new') }}">+ New course</a></p>
+<table class="admintable">
+<tr><th>Course</th><th>Class</th><th>Paper</th><th>Price</th><th>Lessons</th><th>Active</th><th>Actions</th></tr>
+{% for c in courses %}
+<tr><td><strong>{{ c.title }}</strong><br><small>{{ c.description }}</small></td><td>{{ c.class_level }}</td><td>{{ c.paper }}</td><td>৳{{ c.price_bdt }}</td><td>{{ c.lessons }}</td><td>{% if c.active %}✅ Yes{% else %}❌ No{% endif %}</td>
+<td><a href="{{ url_for('admin_course_edit', course_id=c.id) }}">Edit</a>
+<form method="post" action="{{ url_for('admin_course_delete', course_id=c.id) }}" style="display:inline" onsubmit="return confirm('Delete this course?')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit">Delete</button></form></td></tr>
+{% else %}<tr><td colspan="7">No courses yet.</td></tr>{% endfor %}
+</table>
+{% endblock %}

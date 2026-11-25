@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="{{ url_for('admin_dashboard') }}">← Admin Panel</a></p>
+<h1>Offline Check-in — QR / PIN</h1>
+<p>No facial recognition is used. The teacher creates a PIN, the student enters it, the teacher confirms, and the parent is notified.</p>
+<h2>Create a class PIN</h2>
+<form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><label>Class <input name="class_level" required placeholder="9-10"></label><button class="btn" type="submit">Create PIN</button></form>
+<h2>Recent PINs</h2>
+{% for c in codes %}<p>PIN <strong>{{ c.pin }}</strong> — Class {{ c.class_level }} — {% if c.is_active %}✅ Active{% else %}❌ Inactive{% endif %} ({{ c.created_at }})
+{% if c.is_active %}<form method="post" action="{{ url_for('admin_checkin_deactivate', code_id=c.id) }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit">Deactivate</button></form>{% endif %}</p>{% else %}<p>No PINs yet.</p>{% endfor %}
+<h2>Recent check-ins</h2>
+{% for k in checkins %}<p>{{ k.student_name }} ({{ k.student_phone }}) — Class {{ k.class_level }} — <strong>{{ k.status }}</strong> ({{ k.created_at }})
+{% if k.status == 'pending' %}<form method="post" action="{{ url_for('confirm_checkin', checkin_id=k.id) }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit">Confirm arrival</button></form>{% endif %}</p>{% else %}<p>No check-ins yet.</p>{% endfor %}
+{% endblock %}

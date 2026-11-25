@@ -20,3 +20,12 @@ button{cursor:pointer}
 label{display:block;margin:10px 0}
 input,select,textarea{width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;font-family:inherit}
 footer{background:#fff;color:var(--grey);text-align:center;padding:20px;margin-top:30px;border-top:3px solid var(--green)}
+/* Admin Panel */
+.adminnav{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.adminnav a{background:var(--blue);color:#fff;padding:8px 12px;border-radius:8px;text-decoration:none;font-size:.9em}
+.adminnav a:hover{background:#3367d6}
+.admintable{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden}
+.admintable th{background:var(--blue);color:#fff;text-align:left;padding:10px}
+.admintable td{border-top:1px solid #eee;padding:10px;vertical-align:top}
+.admintable tr:nth-child(even) td{background:#f7f8fa}
+.badge.green{background:var(--green)}

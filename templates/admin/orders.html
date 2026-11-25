@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="{{ url_for('admin_dashboard') }}">← Admin Panel</a></p>
+<h1>Orders — bKash / Nagad</h1>
+<p>Filter: <a href="{{ url_for('admin_orders') }}">All</a> | <a href="{{ url_for('admin_orders', status='pending') }}">Pending</a> | <a href="{{ url_for('admin_orders', status='verified') }}">Verified</a> | <a href="{{ url_for('admin_orders', status='rejected') }}">Rejected</a> — showing: <strong>{{ status }}</strong></p>
+<table class="admintable">
+<tr><th>Course</th><th>Student</th><th>Method</th><th>TrxID</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
+{% for o in orders %}
+<tr><td>{{ o.course_title }}</td><td>{{ o.student_name }}<br><small>{{ o.student_phone }}</small></td><td>{{ o.method }}</td><td>{{ o.trxid }}</td><td>৳{{ o.amount_bdt }}</td><td><strong>{{ o.status }}</strong></td>
+<td>{% if o.status == 'pending' %}
+<form method="post" action="{{ url_for('admin_verify_order', order_id=o.id) }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button name="status" value="verified">Verify</button><button name="status" value="rejected">Reject</button></form>
+{% else %}—{% endif %}</td></tr>
+{% else %}<tr><td colspan="7">No orders yet.</td></tr>{% endfor %}
+</table>
+{% endblock %}

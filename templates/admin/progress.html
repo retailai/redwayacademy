@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="{{ url_for('admin_dashboard') }}">← Admin Panel</a></p>
+<h1>Progress Notes &amp; Feedback</h1>
+<p>Add a progress note from the <a href="{{ url_for('progress') }}">Progress page</a> (teacher form).</p>
+<h2>Progress notes</h2>
+{% for p in progress %}
+<p><strong>{{ p.student_name }}</strong> ({{ p.student_phone }}) — Score <strong>{{ p.score }}</strong> — {{ p.suggestion }} <small>({{ p.created_at }})</small>
+<form method="post" action="{{ url_for('admin_progress_delete', note_id=p.id) }}" style="display:inline" onsubmit="return confirm('Delete this note?')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit">Delete</button></form></p>
+{% else %}<p>No progress notes yet.</p>{% endfor %}
+<h2>Feedback from students &amp; parents</h2>
+{% for f in feedback %}<p>"{{ f.message }}" — {{ f.author_name }} <small>({{ f.created_at }})</small></p>{% else %}<p>No feedback yet.</p>{% endfor %}
+{% endblock %}

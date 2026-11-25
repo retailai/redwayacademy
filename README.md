@@ -28,12 +28,79 @@ cd redwayacademy-flask
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python3 app.py
+cp .env.example .env   # then edit .env and set a real SECRET_KEY
+python3 app.py         # dev server, http://127.0.0.1:5000
 ```
 
-Open http://127.0.0.1:5000
+Production-style run on your own computer / VPS:
 
-The SQLite database is created automatically in `instance/redway.db` on first run, and the 11 courses are seeded automatically.
+```bash
+export SECRET_KEY="$(python3 -c 'import secrets; print(secrets.token_hex(32))')"
+export FLASK_ENV=production
+gunicorn -w 2 -b 0.0.0.0:8000 wsgi:app
+```
+
+The SQLite database is created automatically in `instance/redway.db` on first run, and the 11 courses are seeded automatically. Set `DATABASE_PATH` to keep the database outside the app folder if you prefer.
+
+## Admin Panel — /admin
+
+Log in as a **Teacher**, then open **Admin Panel** (top menu, or `/admin`).
+
+How to log in as admin the first time:
+
+1. Register with role **Teacher** and a phone number + password. The first teacher account becomes **Super Admin**.
+2. After that, new teacher accounts can only be added by a logged-in admin from Admin Panel → Teachers (or Dashboard → Add Teacher). Teachers cannot self-claim the role.
+3. Students and parents can self-register with their phone number.
+
+What the Admin Panel does:
+
+- **Dashboard** — counts: users by role, active courses, pending / total orders, pending homework submissions, retakes needing review, testimonials waiting for approval, pending check-ins
+- **Courses** — full CRUD: create, edit (name, class, paper, price, lessons, description, active), delete
+- **Users** — view all users; Super Admin only can change a role or deactivate / activate an account
+- **Homework** — view, edit and delete homework; review submissions (checked / needs work + comment)
+- **Orders** — verify / reject bKash / Nagad payments by Transaction ID; the student and parent are notified
+- **Retakes** — approve / reject / send back for review, and view the uploaded admit card and tabulation sheet
+- **Reviews** — approve / hide / delete testimonials (new endorsements stay hidden until approved)
+- **Progress** — view and delete progress notes, read student / parent feedback
+- **Notify** — send an announcement to everyone, or to students / parents / teachers / one class only
+- **Check-in** — create class PINs, deactivate a PIN, see arrivals and confirm them (parent is notified)
+
+The normal teacher Dashboard still works as before; the Admin Panel is the extra pro control centre on top of it.
+
+## Deploy to Hostinger / redwayacademy.com — production
+
+Hostinger shared hosting uses a Python app with Passenger (WSGI):
+
+1. Upload the project files to your Hostinger Python app folder (or push from GitHub, then pull on the server). Do **not** upload `instance/` (database + uploads), `.venv/`, or a real `.env` file.
+2. In the Hostinger Python app settings, set:
+   - **Startup file:** `passenger_wsgi.py` (already in this project; it imports `application` from `app.py`)
+   - **Python version:** 3.11 or newer
+   - **Environment variables:**
+     - `SECRET_KEY` = a long random secret (generate one: `python3 -c "import secrets; print(secrets.token_hex(32))"`)
+     - `FLASK_ENV` = `production`
+     - Optional: `DATABASE_PATH`, `MAX_UPLOAD_MB`, `UPLOAD_FOLDER`, `LOG_FILE`
+3. Install dependencies on the server: `pip install -r requirements.txt` (Hostinger runs this for the app, or run it in the app's virtualenv).
+4. Point the domain **redwayacademy.com** to the Python app in Hostinger (Domains → redwayacademy.com → point to the app), then turn on the free **SSL certificate** so the site is `https://redwayacademy.com`.
+5. Restart the Python app. Check `https://redwayacademy.com/health` — it should return `{"status": "ok"}`.
+6. First visit: register the first Teacher account — that account becomes Super Admin. Then log in and open `/admin`.
+
+On a VPS instead of shared hosting, run it with gunicorn behind Nginx:
+
+```bash
+export SECRET_KEY="your-long-random-secret"
+export FLASK_ENV=production
+gunicorn -w 2 -b 127.0.0.1:8000 wsgi:app
+```
+
+Then point Nginx at `127.0.0.1:8000`, serve `static/` directly, and enable HTTPS (e.g. Certbot) for redwayacademy.com.
+
+Security notes for production:
+
+- `SECRET_KEY` must come from the environment — the app logs a warning if the dev fallback is in use.
+- `DEBUG` is off when `FLASK_ENV=production`. Session cookies are HTTP-only, SameSite=Lax, and Secure in production.
+- Login is rate-limited (5 wrong attempts per phone number in 15 minutes).
+- Admin POST routes require a CSRF token; all pages send security headers (CSP, X-Frame-Options, nosniff).
+- Uploads are limited to 8 MB, PDF / JPG / PNG only, saved under `instance/uploads/` with random filenames. Back up `instance/redway.db` regularly — it holds all users, orders and registrations.
 
 ## First teacher / Super Admin
 
@@ -50,10 +117,6 @@ The SQLite database is created automatically in `instance/redway.db` on first ru
 - **Retake registration:** `/retake` — free for SSC / HSC retake students. Upload admit card and tabulation sheet (PDF / JPG / PNG). Automatic checks: all required fields present, roll / registration number present, exam and year present, result declared, both files uploaded and readable by extension/size. If everything matches, status is `auto_verified`. If anything is missing or unreadable, status is `needs_review` — never auto-rejected — and a teacher reviews it in the dashboard.
 - **Notifications:** in-app notifications (bell + `/notifications`) for homework, progress, payments, retake results, announcements, and arrivals. Each login type sees only its own notifications.
 - **Arrival check-in:** teacher creates a 4-digit PIN for a class (`/checkin`). The student enters the PIN, the teacher confirms, and the linked parent gets a notification that the student has arrived. No facial recognition is used.
-
-## Deploy to Hostinger / redwayacademy.com
-
-This is a standard Flask app. On shared hosting, run it with a WSGI server (e.g. Gunicorn behind a web server, or Hostinger's Python app support), set `SECRET_KEY` in the environment, and point the domain to the app. Static files are in `static/`, templates in `templates/`.
 
 ## Limitations
 

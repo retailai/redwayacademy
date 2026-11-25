@@ -7,8 +7,8 @@
 <p><a href="{{ url_for('notifications') }}">All notifications</a> • <a href="{{ url_for('progress') }}">Progress</a> • <a href="{{ url_for('feedback') }}">Feedback</a> • <a href="{{ url_for('homework') }}">Homework</a> • <a href="{{ url_for('checkin') }}">Check-in</a></p>
 {% if user.role == 'teacher' %}
 <h2>Teacher panel</h2>
+<p><a class="btn" href="{{ url_for('admin_dashboard') }}">Open Admin Panel</a> <a class="btn yellow" href="{{ url_for('admin_teachers') }}">Add Teacher Account</a></p>
 <form method="post" action="{{ url_for('announce') }}"><label>Announcement to all <input name="message" required></label><button class="btn" type="submit">Send</button></form>
-<p><a class="btn" href="{{ url_for('admin_teachers') }}">Add Teacher Account</a></p>
 <h3>Orders to verify (bKash / Nagad)</h3>
 {% for o in orders %}<p>{{ o.course_title }} — {{ o.student_name }} ({{ o.student_phone }}) — {{ o.method }}, TrxID {{ o.trxid }}, ৳{{ o.amount_bdt }} — <strong>{{ o.status }}</strong>
 {% if o.status == 'pending' %}<form method="post" action="{{ url_for('verify_order', order_id=o.id) }}" style="display:inline"><button name="status" value="verified">Verify</button><button name="status" value="rejected">Reject</button></form>{% endif %}</p>{% else %}<p>No orders yet.</p>{% endfor %}

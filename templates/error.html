@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ code }} — Oops!</h1>
+<p>{{ message }}</p>
+<p><a class="btn" href="{{ url_for('index') }}">Back to Home</a>
+{% if current_user and current_user.role == 'teacher' %} <a class="btn yellow" href="{{ url_for('admin_dashboard') }}">Go to Admin Panel</a>{% endif %}</p>
+{% endblock %}

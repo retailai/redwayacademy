@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="{{ url_for('admin_dashboard') }}">← Admin Panel</a></p>
+<h1>Testimonials — Happy Parents &amp; Students</h1>
+<p>New endorsements stay hidden until an admin approves them.</p>
+{% for t in testimonials %}
+<div class="card"><p>"{{ t.message }}"</p><p><strong>{{ t.author_name }}</strong> — {{ t.role }}{% if t.class_level %}, Class {{ t.class_level }}{% endif %} — Status: <strong>{{ t.status }}</strong></p>
+<form method="post" action="{{ url_for('admin_testimonial_status', t_id=t.id) }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button name="status" value="approved">Approve</button><button name="status" value="hidden">Hide</button></form>
+<form method="post" action="{{ url_for('admin_testimonial_delete', t_id=t.id) }}" style="display:inline" onsubmit="return confirm('Delete this testimonial?')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit">Delete</button></form></div>
+{% else %}<p>No testimonials yet.</p>{% endfor %}
+{% endblock %}

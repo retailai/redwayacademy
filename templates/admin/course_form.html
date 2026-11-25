@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="{{ url_for('admin_courses') }}">← Courses</a></p>
+<h1>{% if course %}Edit course{% else %}New course{% endif %}</h1>
+<form method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<label>Title <input name="title" required value="{{ course.title if course }}"></label>
+<label>Class level <input name="class_level" required placeholder="6, 7, 8, 9-10, 11-12 or 6-12" value="{{ course.class_level if course }}"></label>
+<label>Paper <select name="paper"><option {% if course and course.paper == '1st Paper' %}selected{% endif %}>1st Paper</option><option {% if course and course.paper == '2nd Paper' %}selected{% endif %}>2nd Paper</option><option {% if course and course.paper == 'Spoken English' %}selected{% endif %}>Spoken English</option></select></label>
+<label>Price (৳) <input name="price_bdt" type="number" min="0" required value="{{ course.price_bdt if course else 699 }}"></label>
+<label>Lessons <input name="lessons" type="number" min="1" required value="{{ course.lessons if course else 20 }}"></label>
+<label>Description <textarea name="description">{{ course.description if course }}</textarea></label>
+{% if course %}<label><input type="checkbox" name="active" value="1" style="width:auto" {% if course.active %}checked{% endif %}> Active (show on the website)</label>{% endif %}
+<button class="btn" type="submit">{% if course %}Save changes{% else %}Create course{% endif %}</button>
+</form>
+{% endblock %}
