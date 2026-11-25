@@ -18,7 +18,7 @@
     <div class="card stat-card"><p class="stat-value"><?= count($submissions ?? []) ?></p><p class="stat-label">Homework submissions</p></div>
   </div>
   <h3>Recent orders</h3>
-  <?php foreach (array_slice($orders ?? [], 0, 5) as $o): ?><div class="card"><p><strong><?= e($o['course_title']) ?></strong> — <?= e($o['student_name']) ?> (<?= e($o['method']) ?>, TrxID <?= e($o['trxid']) ?>, ৳<?= (int)$o['amount_bdt'] ?>) — <span class="badge"><?= e($o['status']) ?></span></p></div><?php endforeach; ?>
+  <?php foreach (array_slice($orders ?? [], 0, 5) as $o): ?><div class="card"><p><strong><?= e($o['course_title']) ?></strong> — <?= e($o['student_name']) ?> (<?= e($o['method']) ?>, TrxID <?= e($o['trxid']) ?>, sender <?= e($o['sender_phone'] ?? '') ?>, ৳<?= (int)$o['amount_bdt'] ?>) — <span class="badge"><?= e($o['status']) ?></span></p></div><?php endforeach; ?>
   <h3>Recent retake registrations</h3>
   <?php foreach (array_slice($retakes ?? [], 0, 5) as $r): ?><div class="card"><p><strong><?= e($r['student_name']) ?></strong> — <?= e($r['exam']) ?> <?= e($r['exam_year']) ?> — <span class="badge"><?= e($r['status']) ?></span></p></div><?php endforeach; ?>
   <h3>Recent homework submissions</h3>
@@ -39,7 +39,7 @@
 </section>
 <section aria-labelledby="my-orders">
   <h2 id="my-orders">My orders</h2>
-  <?php foreach ($orders ?? [] as $o): ?><div class="card"><p><strong><?= e($o['course_title']) ?></strong> — <?= e($o['method']) ?>, TrxID <?= e($o['trxid']) ?> — <span class="badge"><?= e($o['status']) ?></span></p></div><?php endforeach; ?>
+  <?php foreach ($orders ?? [] as $o): ?><div class="card"><p><strong><?= e($o['course_title']) ?></strong> — <?= e($o['method']) ?>, TrxID <?= e($o['trxid']) ?>, sender <?= e($o['sender_phone'] ?? '') ?> — <span class="badge"><?= e($o['status']) ?></span></p></div><?php endforeach; ?>
   <?php if (empty($orders ?? [])): ?><p>No orders yet. <a href="/courses">Browse courses</a>.</p><?php endif; ?>
 </section>
 <?php if ($user['role'] === 'parent'): ?>

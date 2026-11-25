@@ -73,7 +73,7 @@ function init_db(PDO $pdo): void {
         "CREATE TABLE IF NOT EXISTS progress_notes (id $ai, student_phone {$vc(20)}, student_name $txt, score $int, suggestion $txt, teacher_phone {$vc(20)}, created_at $ts)",
         "CREATE TABLE IF NOT EXISTS feedback (id $ai, author_phone {$vc(20)}, author_name $txt, message $txt, created_at $ts)",
         "CREATE TABLE IF NOT EXISTS testimonials (id $ai, author_name $txt, role {$vc(20)}, class_level {$vc(20)}, message $txt, status {$vc(20)} DEFAULT 'pending', created_at $ts)",
-        "CREATE TABLE IF NOT EXISTS orders (id $ai, course_id $int, course_title $txt, student_phone {$vc(20)}, student_name $txt, method {$vc(20)}, trxid {$vc(40)}, amount_bdt $int, status {$vc(20)} DEFAULT 'pending', created_at $ts)",
+        "CREATE TABLE IF NOT EXISTS orders (id $ai, course_id $int, course_title $txt, student_phone {$vc(20)}, student_name $txt, method {$vc(20)}, trxid {$vc(40)}, sender_phone {$vc(20)}, amount_bdt $int, status {$vc(20)} DEFAULT 'pending', created_at $ts)",
         "CREATE TABLE IF NOT EXISTS retake_registrations (id $ai, student_name $txt, phone {$vc(20)}, exam {$vc(20)}, exam_year {$vc(10)}, roll_no {$vc(40)}, reg_no {$vc(40)}, result_text $txt, admit_file $txt, tabulation_file $txt, status {$vc(20)} DEFAULT 'needs_review', reasons $txt, created_at $ts)",
         "CREATE TABLE IF NOT EXISTS notifications (id $ai, recipient_phone {$vc(20)}, message $txt, kind {$vc(20)}, is_read $bool NOT NULL DEFAULT 0, created_at $ts)",
         "CREATE TABLE IF NOT EXISTS checkin_codes (id $ai, pin {$vc(10)} NOT NULL, class_level {$vc(20)}, teacher_phone {$vc(20)}, is_active $bool NOT NULL DEFAULT 1, created_at $ts)",
@@ -86,7 +86,7 @@ function init_db(PDO $pdo): void {
     foreach ($tables as $sql) $pdo->exec($sql);
 
     // Light migrations for databases created by an earlier version.
-    $cols = ['users' => ['active', 'is_super_admin'], 'courses' => ['active'], 'testimonials' => ['status']];
+    $cols = ['users' => ['active', 'is_super_admin'], 'courses' => ['active'], 'testimonials' => ['status'], 'orders' => ['sender_phone']];
     foreach ($cols as $table => $names) {
         $existing = [];
         if ($mysql) {
@@ -98,6 +98,7 @@ function init_db(PDO $pdo): void {
             if (!in_array($name, $existing, true)) {
                 $def = $name === 'status' ? "TEXT DEFAULT 'approved'" : ($mysql ? 'TINYINT(1) NOT NULL DEFAULT 1' : 'INTEGER NOT NULL DEFAULT 1');
                 if ($name === 'is_super_admin') $def = $mysql ? 'TINYINT(1) NOT NULL DEFAULT 0' : 'INTEGER NOT NULL DEFAULT 0';
+                if ($name === 'sender_phone') $def = $mysql ? 'VARCHAR(20)' : 'TEXT';
                 $pdo->exec("ALTER TABLE `$table` ADD COLUMN `$name` $def");
             }
         }

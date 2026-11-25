@@ -18,7 +18,7 @@
 </div>
 <section aria-labelledby="recent-orders">
   <h2 id="recent-orders">Recent orders</h2>
-  <?php foreach ($recent_orders as $o): ?><div class="card"><p><?= e($o['course_title']) ?> — <?= e($o['student_name']) ?> — <?= e($o['method']) ?> <?= e($o['trxid']) ?> — <span class="badge"><?= e($o['status']) ?></span></p></div><?php endforeach; ?>
+  <?php foreach ($recent_orders as $o): ?><div class="card"><p><?= e($o['course_title']) ?> — <?= e($o['student_name']) ?> — <?= e($o['method']) ?> <?= e($o['trxid']) ?> — sender <?= e($o['sender_phone'] ?? '') ?> — <span class="badge"><?= e($o['status']) ?></span></p></div><?php endforeach; ?>
 </section>
 <section aria-labelledby="recent-retakes">
   <h2 id="recent-retakes">Recent retakes</h2>

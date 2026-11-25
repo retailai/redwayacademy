@@ -8,12 +8,13 @@
 <ol>
   <li>Send <strong>৳<?= (int)$course['price_bdt'] ?></strong> by bKash / Nagad send money to <strong><?= CONTACT_PHONE ?></strong>.</li>
   <li>Copy the Transaction ID (TrxID) from your bKash / Nagad message.</li>
-  <li>Submit it below. A teacher will verify your payment and mark the order verified.</li>
+  <li>Submit the TrxID and the mobile number you sent the money from below. A teacher will verify your payment and mark the order verified.</li>
 </ol>
 <form method="post" action="/buy/<?= (int)$course['id'] ?>">
   <input type="hidden" name="csrf_token" value="<?= e($csrf_token) ?>">
   <label>Payment method <select name="method"><option>bKash</option><option>Nagad</option></select></label>
   <label>Transaction ID (TrxID) <input name="trxid" required placeholder="e.g. 9AB12C34DE"></label>
+  <label>Sender mobile number — যে নম্বর থেকে টাকা পাঠিয়েছেন <input name="sender_phone" type="tel" inputmode="numeric" required pattern="01[0-9]{9}" maxlength="11" placeholder="01XXXXXXXXX"></label>
   <button class="btn yellow" type="submit">Submit payment (৳<?= (int)$course['price_bdt'] ?>)</button>
 </form>
 <p><small>This is manual send-money + TrxID verification, not an automatic payment gateway. Payment number: bKash / Nagad <a href="tel:<?= CONTACT_PHONE ?>"><?= CONTACT_PHONE ?></a>.</small></p>

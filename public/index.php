@@ -316,11 +316,13 @@ if (preg_match('#^/buy/(\d+)$#', $path, $m)) {
     if ($method === 'POST') {
         $trxid = strtoupper(post('trxid'));
         if ($trxid === '') { flash('Please enter your bKash / Nagad Transaction ID.'); redirect('/buy/' . $course['id']); }
+        $sender_phone = digits_only(post('sender_phone'));
+        if (!preg_match('/^01\d{9}$/', $sender_phone)) { flash('Please enter the sender mobile number (11 digits starting with 01) — the bKash / Nagad number you sent the money from.'); redirect('/buy/' . $course['id']); }
         $method_pay = post('method', 'bKash');
-        run('INSERT INTO orders (course_id, course_title, student_phone, student_name, method, trxid, amount_bdt, created_at) VALUES (?,?,?,?,?,?,?,?)',
-            [$course['id'], $course['title'], $u['phone'], $u['name'], $method_pay, $trxid, $course['price_bdt'], now_str()]);
+        run('INSERT INTO orders (course_id, course_title, student_phone, student_name, method, trxid, sender_phone, amount_bdt, created_at) VALUES (?,?,?,?,?,?,?,?,?)',
+            [$course['id'], $course['title'], $u['phone'], $u['name'], $method_pay, $trxid, $sender_phone, $course['price_bdt'], now_str()]);
         foreach (q("SELECT phone FROM users WHERE role='teacher'") as $t) {
-            notify($t['phone'], "New $method_pay payment to verify: {$course['title']}, TrxID $trxid, ৳{$course['price_bdt']}.", 'payment');
+            notify($t['phone'], "New $method_pay payment to verify: {$course['title']}, TrxID $trxid, sender $sender_phone, ৳{$course['price_bdt']}.", 'payment');
         }
         flash('Order submitted! A teacher will verify your payment soon.');
         redirect('/dashboard');
