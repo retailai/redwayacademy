@@ -1,8 +1,8 @@
-# redwayacademy
+# Redway Academy — PHP + MySQL version
 
-Redway Academy — **Mistakes Mark the Way** / ভুল থেকেই শেখা, ভুল করেই জেতা
+**Mistakes Mark the Way** / ভুল থেকেই শেখা, ভুল করেই জেতা
 
-NCTB English learning website for Bangladesh, for High School (Class 6–10) and College (Class 11–12) only — no Primary.
+NCTB English learning website for Bangladesh, for High School (Class 6–10) and College (Class 11–12) only — no Primary. Plain PHP 8, no framework, PDO database layer. Built to run on **Hostinger Premium shared hosting (PHP, no Python)** — the same features as the Flask version, rebuilt in PHP.
 
 - English for Today (1st Paper) and English 2nd Paper (Grammar and Composition, NCTB, nctb.gov.bd) for Class 6, 7, 8, 9–10 and 11–12
 - Spoken English — Speak with Confidence (৳1499, 24 lessons)
@@ -10,117 +10,106 @@ NCTB English learning website for Bangladesh, for High School (Class 6–10) and
 - 3 phone-number logins: Teacher / Admin / Super Admin, Student, Parent
 - Course purchase with bKash and Nagad (send money, submit Transaction ID, teacher verifies)
 - Free SSC / HSC Retake (Second Chance) registration with admit card + tabulation sheet upload and automatic verification checks
-- Notification system for all 3 login types
-- Offline class arrival by teacher-confirmed QR / PIN check-in (no facial recognition / biometric identification)
+- Notification system for all 3 login types (in-app bell + list)
+- Offline class arrival by teacher-confirmed 4-digit PIN check-in — **no facial recognition / biometric identification anywhere**
 
 ## Brand
 
 - Slogan: **Mistakes Mark the Way**
 - Colours: Google Blue `#4285F4`, Red `#EA4335`, Yellow `#FBBC05`, Green `#34A853`, Grey `#5F6368`
 - Font: Poppins
+- Logo: inline SVG only — no image files
 - Red Pen Method: 1. Red Pen Review, 2. Mistake Notebook (ভুলের খাতা), 3. Weekly Retry Test, 4. Red to Green — monthly Green Progress report to parents
 - Public wording: do not use "fail" in promotion. Use "ভুল করো, বোঝো, সঠিক করো" — make a mistake, understand it, correct it.
 
-## Run locally
+## Run locally (SQLite test)
 
 ```bash
-cd redwayacademy-flask
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env   # then edit .env and set a real SECRET_KEY
-python3 app.py         # dev server, http://127.0.0.1:5000
+cd redwayacademy-php
+cp .env.example .env   # then edit .env: set a real SECRET_KEY
+# Local test DB (SQLite):
+#   DB_DSN=sqlite:/absolute/path/to/redwayacademy-php/storage/redway.db
+php -S 127.0.0.1:8000 -t public
+# Open http://127.0.0.1:8000  — check http://127.0.0.1:8000/health
 ```
 
-Production-style run on your own computer / VPS:
+The SQLite database is created automatically in `storage/redway.db` on first run, and the 11 courses are seeded automatically.
 
-```bash
-export SECRET_KEY="$(python3 -c 'import secrets; print(secrets.token_hex(32))')"
-export FLASK_ENV=production
-gunicorn -w 2 -b 0.0.0.0:8000 wsgi:app
-```
+## Deploy to Hostinger Premium / redwayacademy.com
 
-The SQLite database is created automatically in `instance/redway.db` on first run, and the 11 courses are seeded automatically. Set `DATABASE_PATH` to keep the database outside the app folder if you prefer.
+Hostinger Premium shared hosting supports PHP + MySQL, but **not Python** — that is why this PHP version exists.
+
+1. **Create the MySQL database** in hPanel → Databases → MySQL Databases. Note the database name, username, password and host (usually `localhost`).
+2. **Import the schema:** hPanel → Databases → phpMyAdmin → select your database → Import → choose `schema.sql` from this project. (The app also creates the tables automatically on first run, so this step is a safety net; the seed courses are in `schema.sql` too.)
+3. **Upload the files** to `public_html/` (File Manager or FTP): everything in this project — `public/`, `includes/`, `templates/`, `uploads/`, `.htaccess`, `schema.sql`, `.env.example`. The root `.htaccess` routes all requests into `public/`, which is the web root. Do **not** upload a real `.env` file by FTP in plain sight — create it on the server instead (step 4).
+4. **Set the environment:** copy `.env.example` to `.env` in the project root (one level above `public_html` if your host allows, otherwise in the project root next to `public/`) and fill in:
+   - `APP_ENV=production`
+   - `SECRET_KEY=` a long random secret (generate one: `openssl rand -hex 32`)
+   - `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS` from step 1 (leave `DB_DSN` empty)
+   - `BASE_URL=https://redwayacademy.com`
+   - `UPLOAD_FOLDER=` — leave empty to use the project's `uploads/` folder
+5. **Point the domain** redwayacademy.com to the hosting (it already is, if the domain is on Hostinger) and turn on the free **SSL certificate** so the site is `https://redwayacademy.com`.
+6. **Check health:** visit `https://redwayacademy.com/health` — it should return `{"status":"ok"}`.
+7. **First visit:** register the first Teacher account — that account becomes Super Admin. Then log in and open `/admin`.
+
+## Admin login (first time)
+
+1. Open `/register`, choose role **Teacher**, enter a name, phone number (11 digits) and password (4+ characters). The first teacher account becomes **Super Admin**.
+2. After that, new teacher accounts can only be added by a logged-in admin from Admin Panel → Teachers. Teachers cannot self-claim the role.
+3. Students and parents can self-register with their phone number.
 
 ## Admin Panel — /admin
 
 Log in as a **Teacher**, then open **Admin Panel** (top menu, or `/admin`).
 
-How to log in as admin the first time:
-
-1. Register with role **Teacher** and a phone number + password. The first teacher account becomes **Super Admin**.
-2. After that, new teacher accounts can only be added by a logged-in admin from Admin Panel → Teachers (or Dashboard → Add Teacher). Teachers cannot self-claim the role.
-3. Students and parents can self-register with their phone number.
-
-What the Admin Panel does:
-
 - **Dashboard** — counts: users by role, active courses, pending / total orders, pending homework submissions, retakes needing review, testimonials waiting for approval, pending check-ins
 - **Courses** — full CRUD: create, edit (name, class, paper, price, lessons, description, active), delete
 - **Users** — view all users; Super Admin only can change a role or deactivate / activate an account
+- **Teachers** — add new teacher accounts (admin only)
 - **Homework** — view, edit and delete homework; review submissions (checked / needs work + comment)
 - **Orders** — verify / reject bKash / Nagad payments by Transaction ID; the student and parent are notified
-- **Retakes** — approve / reject / send back for review, and view the uploaded admit card and tabulation sheet
+- **Retakes** — approve / needs review / reject, and view the uploaded admit card and tabulation sheet
 - **Reviews** — approve / hide / delete testimonials (new endorsements stay hidden until approved)
 - **Progress** — view and delete progress notes, read student / parent feedback
 - **Notify** — send an announcement to everyone, or to students / parents / teachers / one class only
 - **Check-in** — create class PINs, deactivate a PIN, see arrivals and confirm them (parent is notified)
 
-The normal teacher Dashboard still works as before; the Admin Panel is the extra pro control centre on top of it.
+## Routes
 
-## Deploy to Hostinger / redwayacademy.com — production
+| Route | What it does |
+|---|---|
+| `/` | Home — slogan, Red Pen Method, courses, approved testimonials |
+| `/courses`, `/course/{id}` | Course list (filter by paper) and detail |
+| `/register`, `/login`, `/logout` | Phone-number auth (3 roles) |
+| `/dashboard` | Role dashboard: teacher overview, student/parent progress + orders |
+| `/homework`, `/homework/{id}/submit`, `/homework/submission/{id}/review` | Homework create / submit / teacher review |
+| `/progress` | Progress notes (teacher adds score + suggestion; students/parents view) |
+| `/feedback` | Feedback field (goes to all teachers) |
+| `/notifications` | In-app notifications (bell + list, marks read) |
+| `/announce` | Teacher announcement to all users |
+| `/testimonials` | Approved reviews + submit an endorsement (pending until approved) |
+| `/buy/{id}` | bKash / Nagad send-money + TrxID order |
+| `/order/{id}/verify` | Teacher verifies / rejects an order |
+| `/retake`, `/retake/{id}` | Free SSC/HSC retake registration + status |
+| `/retake/{id}/review` | Teacher reviews a retake registration |
+| `/checkin`, `/checkin/{id}/confirm` | PIN check-in (teacher creates PIN, student enters it, teacher confirms) |
+| `/uploads/{file}` | Uploaded retake files (login required) |
+| `/admin`, `/admin/courses…`, `/admin/users…`, `/admin/teachers`, `/admin/homework…`, `/admin/orders…`, `/admin/retakes…`, `/admin/testimonials…`, `/admin/progress…`, `/admin/notifications`, `/admin/checkins…` | Admin Panel (teacher only; role changes Super Admin only) |
+| `/health` | `{"status":"ok"}` health check |
+| `/robots.txt`, `/sitemap.xml` | SEO files |
 
-Hostinger shared hosting uses a Python app with Passenger (WSGI):
+## Security
 
-1. Upload the project files to your Hostinger Python app folder (or push from GitHub, then pull on the server). Do **not** upload `instance/` (database + uploads), `.venv/`, or a real `.env` file.
-2. In the Hostinger Python app settings, set:
-   - **Startup file:** `passenger_wsgi.py` (already in this project; it imports `application` from `app.py`)
-   - **Python version:** 3.11 or newer
-   - **Environment variables:**
-     - `SECRET_KEY` = a long random secret (generate one: `python3 -c "import secrets; print(secrets.token_hex(32))"`)
-     - `FLASK_ENV` = `production`
-     - Optional: `DATABASE_PATH`, `MAX_UPLOAD_MB`, `UPLOAD_FOLDER`, `LOG_FILE`
-3. Install dependencies on the server: `pip install -r requirements.txt` (Hostinger runs this for the app, or run it in the app's virtualenv).
-4. Point the domain **redwayacademy.com** to the Python app in Hostinger (Domains → redwayacademy.com → point to the app), then turn on the free **SSL certificate** so the site is `https://redwayacademy.com`.
-5. Restart the Python app. Check `https://redwayacademy.com/health` — it should return `{"status": "ok"}`.
-6. First visit: register the first Teacher account — that account becomes Super Admin. Then log in and open `/admin`.
-
-On a VPS instead of shared hosting, run it with gunicorn behind Nginx:
-
-```bash
-export SECRET_KEY="your-long-random-secret"
-export FLASK_ENV=production
-gunicorn -w 2 -b 127.0.0.1:8000 wsgi:app
-```
-
-Then point Nginx at `127.0.0.1:8000`, serve `static/` directly, and enable HTTPS (e.g. Certbot) for redwayacademy.com.
-
-Security notes for production:
-
-- `SECRET_KEY` must come from the environment — the app logs a warning if the dev fallback is in use.
-- `DEBUG` is off when `FLASK_ENV=production`. Session cookies are HTTP-only, SameSite=Lax, and Secure in production.
-- Login is rate-limited (5 wrong attempts per phone number in 15 minutes).
+- `SECRET_KEY` comes from the environment — the app uses a dev fallback only for local testing; set a real one in production.
+- Session cookies are HTTP-only, SameSite=Lax, Secure in production, 8-hour lifetime.
+- Login is rate-limited: 5 wrong attempts per phone number in 15 minutes (stored in the database, survives restart).
 - Admin POST routes require a CSRF token; all pages send security headers (CSP, X-Frame-Options, nosniff).
-- Uploads are limited to 8 MB, PDF / JPG / PNG only, saved under `instance/uploads/` with random filenames. Back up `instance/redway.db` regularly — it holds all users, orders and registrations.
-
-## First teacher / Super Admin
-
-1. Register with role **Teacher** and a phone number + password. The first teacher account becomes **Super Admin**.
-2. After that, new teacher accounts can only be added by a logged-in admin from Dashboard → Add Teacher. Teachers cannot self-claim the role.
-3. Students and parents can self-register with their phone number.
-
-## Features
-
-- **Courses:** `/courses` — filter by 1st Paper / 2nd Paper / Spoken English. Buy with bKash or Nagad, submit the Transaction ID, a teacher verifies the order in the dashboard.
-- **Homework:** teachers create homework for a class; students submit written answers (and an optional file link); teachers mark it checked / needs work with a comment.
-- **Progress dashboard:** teachers add a score + suggestion per student; students and parents see their own progress, and can give feedback.
-- **Testimonials:** happy parents and students can publish an endorsement.
-- **Retake registration:** `/retake` — free for SSC / HSC retake students. Upload admit card and tabulation sheet (PDF / JPG / PNG). Automatic checks: all required fields present, roll / registration number present, exam and year present, result declared, both files uploaded and readable by extension/size. If everything matches, status is `auto_verified`. If anything is missing or unreadable, status is `needs_review` — never auto-rejected — and a teacher reviews it in the dashboard.
-- **Notifications:** in-app notifications (bell + `/notifications`) for homework, progress, payments, retake results, announcements, and arrivals. Each login type sees only its own notifications.
-- **Arrival check-in:** teacher creates a 4-digit PIN for a class (`/checkin`). The student enters the PIN, the teacher confirms, and the linked parent gets a notification that the student has arrived. No facial recognition is used.
+- Uploads are limited to 8 MB, PDF / JPG / PNG only, saved under `uploads/` with random filenames; `uploads/.htaccess` denies script execution. Uploaded files are served only to logged-in users through the app.
+- Passwords are hashed with PHP `password_hash` (bcrypt).
 
 ## Limitations
 
-- File uploads are stored locally under `instance/uploads/` (filenames only in the database). They are not checked against the Education Board database — there is no public NCTB / board API for that — so "automatic verification" is the document + form checks above, plus teacher review.
+- File uploads are stored locally under `uploads/` (filenames only in the database). They are not checked against the Education Board database — there is no public NCTB / board API for that — so "automatic verification" is the document + form checks (all fields present, 4-digit year, both files uploaded), plus teacher review. There is **no OCR**.
 - Notifications are in-app only (no SMS / email gateway is included, to avoid paid services).
-- Passwords are hashed with Werkzeug. Change `SECRET_KEY` via the `SECRET_KEY` environment variable in production.
-- This is a learning-platform starter, not a payment gateway: bKash / Nagad are manual send-money + Transaction ID verification, as requested.
+- bKash / Nagad are manual send-money + Transaction ID verification, not an automatic payment gateway.
+- This is a learning-platform starter, not a payment gateway.
