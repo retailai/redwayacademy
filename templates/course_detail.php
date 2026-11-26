@@ -19,6 +19,7 @@ foreach ($lessons as $l) {
       <?php if (!empty($is_enrolled)): ?><span class="badge green"><?= t('enrolled') ?></span><?php endif; ?>
     </div>
     <p><?= e($course['description']) ?></p>
+    <?php if (!empty($my_rating)): ?><p><strong><?= sprintf(t('lp_rated'), num((int)$my_rating)) ?></strong> ★</p><?php endif; ?>
 
     <h2><?= t('what_learn') ?></h2>
     <ul class="learn-list">
@@ -58,7 +59,7 @@ foreach ($lessons as $l) {
           <button class="head" type="button" data-acc><?= e(module_heading($course, $m)) ?> — <?= sprintf(t('module_lessons'), num($from), num($to)) ?> <span aria-hidden="true">▾</span></button>
           <div class="body">
             <?php foreach ($ls as $l): ?>
-            <div class="lesson-row"><a href="/course/<?= (int)$course['id'] ?>/lesson/<?= (int)$l['lesson_no'] ?>"><?= t('lesson') ?> <?= num((int)$l['lesson_no']) ?> — <?= e($l['title']) ?></a><span class="done-dot" aria-hidden="true">›</span></div>
+            <div class="lesson-row"><a href="/course/<?= (int)$course['id'] ?>/lesson/<?= (int)$l['lesson_no'] ?>"><?= t('lesson') ?> <?= num((int)$l['lesson_no']) ?> — <?= e($l['title']) ?></a><?php if (in_array((int)$l['lesson_no'], $done_lessons ?? [], true)): ?><span class="done-dot" aria-label="<?= e(t('lp_done')) ?>">✓</span><?php else: ?><span class="done-dot" aria-hidden="true">›</span><?php endif; ?></div>
             <?php endforeach; ?>
           </div>
         </div>

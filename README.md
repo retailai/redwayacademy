@@ -5,7 +5,7 @@
 NCTB English learning website for Bangladesh, for High School (Class 6–10) and College (Class 11–12) only — no Primary. Plain PHP 8, no framework, PDO database layer. Built to run on **Hostinger Premium shared hosting (PHP, no Python)** — the same features as the Flask version, rebuilt in PHP.
 
 - English for Today (1st Paper) and English 2nd Paper (Grammar and Composition, NCTB, nctb.gov.bd) for Class 6, 7, 8, 9–10 and 11–12
-- Spoken English — Speak with Confidence (৳1499, 24 lessons)
+- Spoken English — Speak with Confidence (24 lessons, 4 named modules); monthly subscription ৳1450/month, live classes 3 days/week on Google Meet / Zoom
 - Homework, student progress dashboard, feedback, testimonials
 - 3 phone-number logins: Teacher / Admin / Super Admin, Student, Parent
 - Course purchase with bKash and Nagad (send money, submit Transaction ID, teacher verifies)
@@ -13,12 +13,44 @@ NCTB English learning website for Bangladesh, for High School (Class 6–10) and
 - Notification system for all 3 login types (in-app bell + list)
 - Offline class arrival by teacher-confirmed 4-digit PIN check-in — **no facial recognition / biometric identification anywhere**
 
+## Courses — only 2
+
+The database still holds 11 course rows (10 Academic paper rows + 1 Spoken
+row, 244 lessons — nothing deleted), but the site presents exactly **2
+courses**: **Spoken English** (4 named modules × 24 lecture sheets) and
+**Academic English** (one course, split by class: 6, 7, 8, 9-10, 11-12; each
+class holds English for Today + Grammar & Composition together).
+
+- `/courses` shows the 2 track cards only, never the 11-row list.
+- A logged-in student only ever sees **their own registered class** — the
+  class picker highlights it, and opening another class's lesson or course
+  page redirects them back to their own class page with a bilingual message
+  (see `class_bucket()` / `student_class_bucket()` in `includes/helpers.php`).
+- A visitor picks a class and sees that class's module/lesson list, but
+  opening a lesson still needs login + enrolment, as before.
+- A monthly ৳1450 Academic subscription covers the student's own class only;
+  a Spoken subscription covers the whole Spoken course.
+
+## Design (v3, 2026-11-26)
+
+Reference design: Google-product feel, white app shell — blue announcement
+strip; sticky header (logo PNG exactly as supplied, search pill, pill nav,
+bell, dark/light theme toggle, avatar); hero with a ruled-notebook red-pen
+card; 2 gradient track cards; 3 numbered steps; 4 feature tiles; blue CTA
+band; 5-column footer with the real phone **01712506612** and address
+**Nikunja 2, Khilkhet, Dhaka-1229**; WhatsApp → wa.me/8801712506612,
+YouTube → https://www.youtube.com/@RedwayAcademy, Facebook is "coming soon"
+(no page yet — no link invented). Dark mode via `[data-theme="dark"]`,
+persisted in localStorage, default light. Lesson player is two-pane: sticky
+sidebar (progress bar, collapsible modules, done ticks) + stage (video area,
+mark-done bar, lecture sheet, per-lesson note, star rating).
+
 ## Brand
 
 - Slogan: **Mistakes Mark the Way**
 - Colours: Google Blue `#4285F4`, Red `#EA4335`, Yellow `#FBBC05`, Green `#34A853`, Grey `#5F6368`
-- Font: Poppins
-- Logo: inline SVG only — no image files
+- Font: Hind Siliguri (Bangla) + Poppins (Latin)
+- Logo: the supplied logo PNG (`public/assets/img/logo.png`) exactly as given — never recoloured, cropped or redrawn. Favicon is only the Redway W inside a circle.
 - Red Pen Method: 1. Red Pen Review, 2. Mistake Notebook (ভুলের খাতা), 3. Weekly Retry Test, 4. Red to Green — monthly Green Progress report to parents
 - Public wording: do not use "fail" in promotion. Use "ভুল করো, বোঝো, সঠিক করো" — make a mistake, understand it, correct it.
 

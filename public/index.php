@@ -111,17 +111,20 @@ if ($path === '/' && $method === 'GET') {
     $me = current_user();
     $resume = null;
     if ($me && $me['role'] === 'student') {
-        $enrolled = enrolled_courses($me['phone']);
+        $enrolled = enrolled_courses($me['phone'], student_class_bucket($me));
         $resume = $enrolled[0] ?? null;
     }
     render('home', ['title' => 'Redway Academy — Mistakes Mark the Way',
         'courses' => q('SELECT * FROM courses WHERE active=1 ORDER BY id'),
+        'total_lessons' => (int)db()->query('SELECT COUNT(*) FROM lessons')->fetchColumn(),
         'testimonials' => q("SELECT * FROM testimonials WHERE status='approved' ORDER BY id DESC LIMIT 6"),
         'resume_course' => $resume]);
 }
 if ($path === '/courses' && $method === 'GET') {
-    // Two-step picker, few clicks: track -> class (Academic) or education
-    // level (Spoken) -> course list. Search (?q=) jumps straight to results.
+    // Only 2 courses: Spoken English and Academic English.
+    // Academic: track -> class picker -> one class page (1st + 2nd Paper together).
+    // Spoken: track -> last-education picker -> the Spoken course page.
+    // Search (?q=) jumps straight to results. Steps: tracks | pick | class | list.
     $qtext = trim($_GET['q'] ?? '');
     // Old paper links (?paper=) map onto tracks for backwards compatibility.
     $track = in_array($_GET['track'] ?? '', ['academic', 'spoken'], true) ? $_GET['track'] : null;
@@ -132,9 +135,10 @@ if ($path === '/courses' && $method === 'GET') {
     $edu = in_array($_GET['edu'] ?? '', ['SSC', 'HSC', 'Honours', 'Other'], true) ? $_GET['edu'] : '';
     $page = max(1, (int)($_GET['page'] ?? 1));
     $per_page = 6;
-    $step = 'tracks'; // tracks | pick | list
+    $step = 'tracks';
     $conds = ['active=1']; $params = [];
     $classes = ['6', '7', '8', '9-10', '11-12'];
+    $me = current_user();
     if ($qtext !== '') {
         $step = 'list';
         $conds[] = '(title LIKE ? OR description LIKE ?)';
@@ -145,15 +149,39 @@ if ($path === '/courses' && $method === 'GET') {
         $step = 'pick';
     } elseif ($track === 'spoken' && $edu === '') {
         $step = 'pick';
+    } elseif ($track === 'spoken') {
+        // Spoken English is one course for everyone: go to its page.
+        $sp = q1("SELECT id FROM courses WHERE track='spoken' AND active=1 ORDER BY id LIMIT 1");
+        if ($sp) redirect('/course/' . (int)$sp['id']);
+        $step = 'tracks';
     } else {
-        $step = 'list';
-        $conds[] = 'track=?'; $params[] = $track;
-        if ($track === 'academic') { $conds[] = 'class_level=?'; $params[] = $class; }
+        // Academic class page: a logged-in student only ever sees their own class.
+        $own_bucket = student_class_bucket($me);
+        if ($own_bucket !== null && $own_bucket !== $class) {
+            flash(sprintf(t('class_gate'), $own_bucket, $own_bucket));
+            redirect('/courses?track=academic&class=' . urlencode($own_bucket));
+        }
+        $step = 'class';
     }
     $rows = []; $total = 0; $pages = 1;
-    $counts = [];
+    $counts = []; $lesson_counts = [];
     foreach (tracks() as $tr) {
         $counts[$tr] = (int)db()->query("SELECT COUNT(*) FROM courses WHERE active=1 AND track='" . $tr . "'")->fetchColumn();
+        $lesson_counts[$tr] = (int)db()->query("SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id=l.course_id WHERE c.active=1 AND c.track='" . $tr . "'")->fetchColumn();
+    }
+    $academic_classes = (int)db()->query("SELECT COUNT(DISTINCT class_level) FROM courses WHERE active=1 AND track='academic'")->fetchColumn();
+    $papers = []; $class_lessons_total = 0; $class_subscribed = false; $class_paper_enrolled = [];
+    if ($step === 'class') {
+        $papers = q('SELECT * FROM courses WHERE active=1 AND track=? AND class_level=? ORDER BY id', ['academic', $class]);
+        foreach ($papers as &$p) {
+            $p['lessons_list'] = q('SELECT lesson_no, title FROM lessons WHERE course_id=? ORDER BY lesson_no', [(int)$p['id']]);
+            $class_lessons_total += count($p['lessons_list']);
+            if ($me && $me['role'] === 'student') {
+                $class_paper_enrolled[(int)$p['id']] = is_enrolled($me['phone'], (int)$p['id']);
+            }
+        }
+        unset($p);
+        $class_subscribed = $me && $me['role'] === 'student' ? is_subscribed($me['phone'], 'academic') : false;
     }
     if ($step === 'list') {
         $where = implode(' AND ', $conds);
@@ -177,13 +205,25 @@ if ($path === '/courses' && $method === 'GET') {
     };
     render('courses', ['title' => 'Courses — Redway Academy', 'courses' => $rows,
         'step' => $step, 'track' => $track, 'class' => $class, 'edu' => $edu, 'q' => $qtext,
-        'classes' => $classes, 'counts' => $counts, 'page' => $page, 'pages' => $pages,
-        'total' => $total, 'list_url' => $list_url]);
+        'classes' => $classes, 'counts' => $counts, 'lesson_counts' => $lesson_counts,
+        'academic_classes' => $academic_classes, 'page' => $page, 'pages' => $pages,
+        'total' => $total, 'list_url' => $list_url, 'papers' => $papers,
+        'class_lessons_total' => $class_lessons_total, 'class_subscribed' => $class_subscribed,
+        'class_paper_enrolled' => $class_paper_enrolled, 'own_class' => student_class_bucket($me),
+        'me' => $me]);
 }
 if (preg_match('#^/course/(\d+)$#', $path, $m) && $method === 'GET') {
     $c = q1('SELECT * FROM courses WHERE id=?', [(int)$m[1]]);
     if (!$c) abort_page(404, 'Sorry — that course does not exist.');
     $u = current_user();
+    // Class gate: an Academic student only opens their own registered class.
+    $own_url = own_class_url($u);
+    if ($own_url !== null && ($c['track'] ?? '') === 'academic'
+        && class_bucket((string)($c['class_level'] ?? '')) !== student_class_bucket($u)) {
+        $b = student_class_bucket($u);
+        flash(sprintf(t('class_gate'), $b, $b));
+        redirect($own_url);
+    }
     $enrolled = $u && $u['role'] === 'student' ? is_enrolled($u['phone'], (int)$c['id']) : false;
     $can_view = $enrolled || ($u && $u['role'] === 'teacher');
     $track = (string)($c['track'] ?? 'academic');
@@ -191,7 +231,38 @@ if (preg_match('#^/course/(\d+)$#', $path, $m) && $method === 'GET') {
     render('course_detail', ['title' => $c['title'] . ' — Redway Academy', 'course' => $c,
         'is_enrolled' => $enrolled, 'can_view_lessons' => $can_view,
         'track_fee' => track_monthly_fee($track), 'is_subscribed' => $subscribed,
-        'lessons' => $can_view ? q('SELECT lesson_no, title FROM lessons WHERE course_id=? ORDER BY lesson_no', [(int)$c['id']]) : []]);
+        'lessons' => $can_view ? q('SELECT lesson_no, title FROM lessons WHERE course_id=? ORDER BY lesson_no', [(int)$c['id']]) : [],
+        'done_lessons' => $u && $u['role'] === 'student' ? lesson_progress((int)$u['id'], (int)$c['id']) : [],
+        'my_rating' => $u && $u['role'] === 'student' ? course_rating_get((int)$u['id'], (int)$c['id']) : 0]);
+}
+// --- Lesson player actions: mark done / save note / rate -------------------
+if (preg_match('#^/course/(\d+)/lesson/(\d+)/(done|note|rate)$#', $path, $m) && $method === 'POST') {
+    $u = login_required();
+    require_csrf();
+    $c = q1('SELECT * FROM courses WHERE id=?', [(int)$m[1]]);
+    $lesson = $c ? q1('SELECT * FROM lessons WHERE course_id=? AND lesson_no=?', [(int)$m[1], (int)$m[2]]) : null;
+    if (!$c || !$lesson) abort_page(404, 'Sorry — that lesson does not exist.');
+    $allowed = ($u['role'] === 'teacher') || ($u['role'] === 'student' && is_enrolled($u['phone'], (int)$c['id']));
+    // Class gate applies here too: only the student's own class.
+    $own_url = own_class_url($u);
+    if ($allowed && $own_url !== null && ($c['track'] ?? '') === 'academic'
+        && class_bucket((string)($c['class_level'] ?? '')) !== student_class_bucket($u)) {
+        $allowed = false;
+    }
+    if (!$allowed) {
+        flash('Please enrol in this course first — buy it with bKash / Nagad and a teacher will verify your payment.');
+        redirect('/course/' . (int)$c['id']);
+    }
+    if ($m[3] === 'done') {
+        lesson_mark_done((int)$u['id'], (int)$c['id'], (int)$m[2]);
+    } elseif ($m[3] === 'note') {
+        lesson_note_save((int)$u['id'], (int)$c['id'], (int)$m[2], mb_substr(trim($_POST['note'] ?? ''), 0, 4000));
+        flash(t('lp_note_saved'));
+    } else {
+        $stars = max(1, min(5, (int)($_POST['stars'] ?? 0)));
+        if ($stars > 0) { course_rating_save((int)$u['id'], (int)$c['id'], $stars); flash(t('lp_rated')); }
+    }
+    redirect('/course/' . (int)$c['id'] . '/lesson/' . (int)$m[2]);
 }
 // --- Lesson view: enrolled students and teachers only -----------------------
 if (preg_match('#^/course/(\d+)/lesson/(\d+)$#', $path, $m) && $method === 'GET') {
@@ -205,10 +276,22 @@ if (preg_match('#^/course/(\d+)/lesson/(\d+)$#', $path, $m) && $method === 'GET'
         flash('Please enrol in this course first — buy it with bKash / Nagad and a teacher will verify your payment.');
         redirect('/course/' . (int)$c['id']);
     }
+    // Class gate: an Academic student who opens another class's lesson is
+    // sent back to their own class page with a bilingual message.
+    $own_url = own_class_url($u);
+    if ($own_url !== null && ($c['track'] ?? '') === 'academic'
+        && class_bucket((string)($c['class_level'] ?? '')) !== student_class_bucket($u)) {
+        $b = student_class_bucket($u);
+        flash(sprintf(t('class_gate'), $b, $b));
+        redirect($own_url);
+    }
     $total = (int)q1('SELECT COUNT(*) AS n FROM lessons WHERE course_id=?', [(int)$c['id']])['n'];
     render('lesson', ['title' => $lesson['title'] . ' — ' . $c['title'],
         'course' => $c, 'lesson' => $lesson, 'total' => $total,
-        'all_lessons' => q('SELECT lesson_no, title FROM lessons WHERE course_id=? ORDER BY lesson_no', [(int)$c['id']])]);
+        'all_lessons' => q('SELECT lesson_no, title FROM lessons WHERE course_id=? ORDER BY lesson_no', [(int)$c['id']]),
+        'done_lessons' => $u['role'] === 'student' ? lesson_progress((int)$u['id'], (int)$c['id']) : [],
+        'my_note' => $u['role'] === 'student' ? lesson_note_get((int)$u['id'], (int)$c['id'], (int)$m[2]) : '',
+        'my_rating' => $u['role'] === 'student' ? course_rating_get((int)$u['id'], (int)$c['id']) : 0]);
 }
 if ($path === '/testimonials') {
     if ($method === 'POST') {
@@ -322,18 +405,19 @@ function build_dashboard_ctx(array $u): array {
             'students' => q("SELECT * FROM users WHERE role='student' ORDER BY id DESC LIMIT 50")];
     } elseif ($u['role'] === 'parent') {
         $phone = $u['linked_student_phone'] ?: $u['phone'];
-        $linked = $u['linked_student_phone'] ? q1('SELECT name FROM users WHERE phone=? AND role=?', [$u['linked_student_phone'], 'student']) : null;
+        $linked = $u['linked_student_phone'] ? q1('SELECT name, class_level FROM users WHERE phone=? AND role=?', [$u['linked_student_phone'], 'student']) : null;
+        $linked_bucket = ($linked && trim((string)($linked['class_level'] ?? '')) !== '') ? class_bucket((string)$linked['class_level']) : null;
         $ctx += ['progress' => q('SELECT * FROM progress_notes WHERE student_phone=? ORDER BY id DESC', [$phone]),
             'orders' => q('SELECT * FROM orders WHERE student_phone=? ORDER BY id DESC', [$phone]),
             'checkins' => q('SELECT * FROM checkins WHERE student_phone=? ORDER BY id DESC LIMIT 10', [$phone]),
-            'my_courses' => enrolled_courses($phone),
+            'my_courses' => enrolled_courses($phone, $linked_bucket),
             'linked_student_name' => $linked['name'] ?? null];
     } else {
         $ctx += ['progress' => q('SELECT * FROM progress_notes WHERE student_phone=? ORDER BY id DESC', [$u['phone']]),
             'orders' => q('SELECT * FROM orders WHERE student_phone=? ORDER BY id DESC', [$u['phone']]),
             'homework' => q('SELECT * FROM homework ORDER BY id DESC'),
             'my_submissions' => q('SELECT * FROM submissions WHERE student_phone=? ORDER BY id DESC', [$u['phone']]),
-            'my_courses' => enrolled_courses($u['phone'])];
+            'my_courses' => enrolled_courses($u['phone'], student_class_bucket($u))];
     }
     $ctx['notifications'] = q('SELECT * FROM notifications WHERE recipient_phone=? ORDER BY id DESC LIMIT 10', [$u['phone']]);
     return $ctx;

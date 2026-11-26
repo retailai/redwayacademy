@@ -146,6 +146,66 @@ function subscription_until(string $phone, string $track): string {
     $st->execute([$phone, $track]);
     return (string)($st->fetchColumn() ?: '');
 }
+// ---- two courses only: Academic English is one course, split by class ----
+function class_bucket(string $level): string {
+    $l = trim($level);
+    if ($l === '9' || $l === '10' || $l === '9-10' || $l === '৯-১০') return '9-10';
+    if ($l === '11' || $l === '12' || $l === '11-12' || $l === '১১-১২') return '11-12';
+    return $l;
+}
+function student_class_bucket(?array $user): ?string {
+    if (!$user || ($user['role'] ?? '') !== 'student') return null;
+    $l = trim((string)($user['class_level'] ?? ''));
+    if ($l === '') return null;
+    return class_bucket($l);
+}
+// URL to a student's own Academic class page (used when they try another class).
+function own_class_url(?array $user): ?string {
+    $b = student_class_bucket($user);
+    return $b === null ? null : '/courses?track=academic&class=' . urlencode($b);
+}
+
+// ---- lesson progress / per-lesson note / course rating ----
+function lesson_mark_done(int $user_id, int $course_id, int $lesson_no): void {
+    if (db_driver() === 'mysql') {
+        $st = db()->prepare("INSERT INTO lesson_progress (user_id, course_id, lesson_no, done) VALUES (?,?,?,1) ON DUPLICATE KEY UPDATE done=1, updated_at=CURRENT_TIMESTAMP");
+    } else {
+        $st = db()->prepare("INSERT INTO lesson_progress (user_id, course_id, lesson_no, done) VALUES (?,?,?,1) ON CONFLICT(user_id, course_id, lesson_no) DO UPDATE SET done = 1, updated_at = CURRENT_TIMESTAMP");
+    }
+    $st->execute([$user_id, $course_id, $lesson_no]);
+}
+function lesson_progress(int $user_id, int $course_id): array {
+    $st = db()->prepare("SELECT lesson_no FROM lesson_progress WHERE user_id = ? AND course_id = ? AND done = 1");
+    $st->execute([$user_id, $course_id]);
+    return array_map('intval', $st->fetchAll(PDO::FETCH_COLUMN));
+}
+function lesson_note_get(int $user_id, int $course_id, int $lesson_no): string {
+    $st = db()->prepare("SELECT note FROM lesson_progress WHERE user_id = ? AND course_id = ? AND lesson_no = ?");
+    $st->execute([$user_id, $course_id, $lesson_no]);
+    return (string)($st->fetchColumn() ?: '');
+}
+function lesson_note_save(int $user_id, int $course_id, int $lesson_no, string $note): void {
+    if (db_driver() === 'mysql') {
+        $st = db()->prepare("INSERT INTO lesson_progress (user_id, course_id, lesson_no, done, note) VALUES (?,?,?,0,?) ON DUPLICATE KEY UPDATE note=VALUES(note), updated_at=CURRENT_TIMESTAMP");
+    } else {
+        $st = db()->prepare("INSERT INTO lesson_progress (user_id, course_id, lesson_no, done, note) VALUES (?,?,?,0,?) ON CONFLICT(user_id, course_id, lesson_no) DO UPDATE SET note = excluded.note, updated_at = CURRENT_TIMESTAMP");
+    }
+    $st->execute([$user_id, $course_id, $lesson_no, $note]);
+}
+function course_rating_get(int $user_id, int $course_id): int {
+    $st = db()->prepare("SELECT stars FROM course_ratings WHERE user_id = ? AND course_id = ?");
+    $st->execute([$user_id, $course_id]);
+    return (int)($st->fetchColumn() ?: 0);
+}
+function course_rating_save(int $user_id, int $course_id, int $stars): void {
+    if (db_driver() === 'mysql') {
+        $st = db()->prepare("INSERT INTO course_ratings (user_id, course_id, stars) VALUES (?,?,?) ON DUPLICATE KEY UPDATE stars=VALUES(stars), updated_at=CURRENT_TIMESTAMP");
+    } else {
+        $st = db()->prepare("INSERT INTO course_ratings (user_id, course_id, stars) VALUES (?,?,?) ON CONFLICT(user_id, course_id) DO UPDATE SET stars = excluded.stars, updated_at = CURRENT_TIMESTAMP");
+    }
+    $st->execute([$user_id, $course_id, $stars]);
+}
+
 function is_enrolled(string $phone, int $course_id): bool {
     $st = db()->prepare("SELECT COUNT(*) FROM orders WHERE student_phone=? AND course_id=? AND status='verified'");
     $st->execute([$phone, $course_id]);
@@ -158,10 +218,17 @@ function is_enrolled(string $phone, int $course_id): bool {
 }
 /** Verified courses for a phone, most recent first (one-time orders plus
  * every course of any actively subscribed track). */
-function enrolled_courses(string $phone): array {
+// Only 2 courses: a monthly Academic subscription covers the student's own
+// registered class only. When $class_bucket is given, Academic paper courses
+// of other classes are left out (Spoken is one course for all).
+function enrolled_courses(string $phone, ?string $class_bucket = null): array {
     $st = db()->prepare("SELECT DISTINCT c.* FROM courses c WHERE c.id IN (SELECT course_id FROM orders WHERE student_phone=? AND status='verified') OR c.track IN (SELECT track FROM orders WHERE student_phone=? AND plan='monthly' AND status='verified' AND valid_until IS NOT NULL AND valid_until<>'' AND valid_until>=?) ORDER BY c.id");
     $st->execute([$phone, $phone, date('Y-m-d')]);
-    return $st->fetchAll();
+    $rows = $st->fetchAll();
+    if ($class_bucket !== null) {
+        $rows = array_values(array_filter($rows, fn($c) => $c['track'] !== 'academic' || class_bucket((string)($c['class_level'] ?? '')) === $class_bucket));
+    }
+    return $rows;
 }
 
 function allowed_upload(string $name): bool {

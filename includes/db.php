@@ -82,6 +82,10 @@ function init_db(PDO $pdo): void {
         "CREATE TABLE IF NOT EXISTS checkins (id $ai, student_phone {$vc(20)}, student_name $txt, class_level {$vc(20)}, pin {$vc(10)}, status {$vc(20)} DEFAULT 'pending', created_at $ts)",
         "CREATE TABLE IF NOT EXISTS announcements (id $ai, teacher_phone {$vc(20)}, message $txt, created_at $ts)",
         "CREATE TABLE IF NOT EXISTS lessons (id $ai, course_id $int, lesson_no $int, title $txt NOT NULL, body $txt NOT NULL, created_at $ts)",
+        // Lesson player: per-user done state + personal note (unique per user/course/lesson).
+        "CREATE TABLE IF NOT EXISTS lesson_progress (id $ai, user_id $int NOT NULL, course_id $int NOT NULL, lesson_no $int NOT NULL, done $bool NOT NULL DEFAULT 0, note $txt, updated_at $ts, UNIQUE(user_id, course_id, lesson_no))",
+        // Lesson player: per-user star rating of a course (1–5, one row per user/course).
+        "CREATE TABLE IF NOT EXISTS course_ratings (id $ai, user_id $int NOT NULL, course_id $int NOT NULL, stars $int NOT NULL, updated_at $ts, UNIQUE(user_id, course_id))",
         // Login rate-limit: 5 failed attempts per phone in 15 minutes (DB-backed, survives restart).
         "CREATE TABLE IF NOT EXISTS login_attempts (id $ai, phone {$vc(20)}, attempted_at $ts)",
         // Persistent "remember me" logins: selector + hashed validator, 30 days.
