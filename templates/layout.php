@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/style.css?v=v4">
+<link rel="stylesheet" href="/assets/css/style.css?v=v5">
 </head>
 <body data-soon-msg="<?= e(t('soon_msg')) ?>">
 <a class="skip-link" href="#main">Skip to main content</a>
@@ -24,8 +24,29 @@
   <div class="header-row">
     <button class="icon-btn burger" type="button" id="burgerBtn" aria-label="Menu" aria-expanded="false" aria-controls="drawer">☰</button>
     <a class="brand" href="/" aria-label="Redway Academy — home">
-      <span class="brand-logo"><img src="/assets/img/logo.png" alt="Redway Academy — Mistakes Mark the Way" width="2400" height="819"></span>
+      <span class="brand-logo"><img src="/assets/img/logo.png" alt="Redway Academy — Mistakes Mark the Way" width="1568" height="535"></span>
     </a>
+    <form class="header-search" role="search" method="get" action="/courses">
+      <label class="visually-hidden" for="q"><?= t('search_ph') ?></label>
+      <input id="q" name="q" type="search" placeholder="<?= e(t('search_ph')) ?>" value="<?= e($_GET['q'] ?? '') ?>">
+      <button type="submit"><?= t('search_btn') ?></button>
+    </form>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="/"<?php if (($_SERVER['REQUEST_URI'] ?? '/') === '/'): ?> aria-current="page"<?php endif; ?>><?= t('nav_home') ?></a>
+      <a href="/courses"<?php if (str_starts_with($_SERVER['REQUEST_URI'] ?? '', '/course') || str_starts_with($_SERVER['REQUEST_URI'] ?? '', '/buy')): ?> aria-current="page"<?php endif; ?>><?= t('nav_courses') ?></a>
+      <?php if (!empty($retake_active)): ?><a href="/retake"><?= t('nav_retake') ?></a><?php endif; ?>
+      <a href="/testimonials"><?= t('nav_reviews') ?></a>
+      <a href="/homework"><?= t('nav_homework') ?></a>
+      <div class="more-menu" id="moreMenu">
+        <a href="#" id="moreBtn" aria-haspopup="true" aria-expanded="false"><?= t('nav_more') ?> ▾</a>
+        <div class="more-pop" role="menu" aria-label="<?= e(t('nav_more')) ?>">
+          <a href="/checkin" role="menuitem"><?= t('nav_checkin') ?></a>
+          <a href="#" role="menuitem" data-soon><?= t('nav_free_class') ?></a>
+          <a href="#" role="menuitem" data-soon><?= t('nav_notes') ?></a>
+          <a href="#" role="menuitem" data-soon><?= t('nav_community') ?></a>
+        </div>
+      </div>
+    </nav>
     <div class="header-right">
       <span class="lang-switch" role="group" aria-label="Language / ভাষা">
         <a href="<?= e(url_with_query(['lang' => 'bn'])) ?>"<?php if (lang_is_bn()): ?> class="active" aria-current="true"<?php endif; ?>><?= t('lang_bangla') ?></a>
@@ -55,33 +76,12 @@
         <a class="btn" href="/register"><?= t('nav_register') ?></a>
       <?php endif; ?>
     </div>
-    <form class="header-search" role="search" method="get" action="/courses">
-      <label class="visually-hidden" for="q"><?= t('search_ph') ?></label>
-      <input id="q" name="q" type="search" placeholder="<?= e(t('search_ph')) ?>" value="<?= e($_GET['q'] ?? '') ?>">
-      <button type="submit"><?= t('search_btn') ?></button>
-    </form>
-    <nav class="main-nav" aria-label="Main navigation">
-      <a href="/"<?php if (($_SERVER['REQUEST_URI'] ?? '/') === '/'): ?> aria-current="page"<?php endif; ?>><?= t('nav_home') ?></a>
-      <a href="/courses"<?php if (str_starts_with($_SERVER['REQUEST_URI'] ?? '', '/course') || str_starts_with($_SERVER['REQUEST_URI'] ?? '', '/buy')): ?> aria-current="page"<?php endif; ?>><?= t('nav_courses') ?></a>
-      <?php if (!empty($retake_active)): ?><a href="/retake"><?= t('nav_retake') ?></a><?php endif; ?>
-      <a href="/testimonials"><?= t('nav_reviews') ?></a>
-      <a href="/homework"><?= t('nav_homework') ?></a>
-      <div class="more-menu" id="moreMenu">
-        <a href="#" id="moreBtn" aria-haspopup="true" aria-expanded="false"><?= t('nav_more') ?> ▾</a>
-        <div class="more-pop" role="menu" aria-label="<?= e(t('nav_more')) ?>">
-          <a href="/checkin" role="menuitem"><?= t('nav_checkin') ?></a>
-          <a href="#" role="menuitem" data-soon><?= t('nav_free_class') ?></a>
-          <a href="#" role="menuitem" data-soon><?= t('nav_notes') ?></a>
-          <a href="#" role="menuitem" data-soon><?= t('nav_community') ?></a>
-        </div>
-      </div>
-    </nav>
   </div>
 </header>
 <div class="drawer-scrim" id="drawerScrim"></div>
 <aside class="drawer" id="drawer" aria-label="Menu">
   <div class="drawer-head">
-    <span class="brand-logo"><img src="/assets/img/logo.png" alt="Redway Academy" width="2400" height="819"></span>
+    <span class="brand-logo"><img src="/assets/img/logo.png" alt="Redway Academy" width="1568" height="535"></span>
     <button class="icon-btn" type="button" id="drawerClose" aria-label="Close">✕</button>
   </div>
   <nav>
@@ -117,8 +117,6 @@
       <p><?= t('foot_about') ?></p>
     </div>
     <div class="footer-brand">
-      <span class="brand-badge"><img src="/assets/img/favicon.png" alt="" width="46" height="46" loading="lazy"><span class="word">redway<small>ACADEMY</small></span></span>
-      <p style="margin-top:12px"><?= t('foot_about') ?></p>
       <div class="social-row" aria-label="Social links">
         <a href="https://wa.me/880<?= substr(CONTACT_PHONE, 1) ?>" aria-label="WhatsApp — <?= CONTACT_PHONE ?>" title="WhatsApp">W</a>
         <a href="https://www.youtube.com/@RedwayAcademy" aria-label="YouTube — Redway Academy" title="YouTube">▶</a>
@@ -155,6 +153,6 @@
   <div class="copyright-bar"><p><?= sprintf(t('rights'), date('Y')) ?> — Mistakes Mark the Way</p></div>
 </footer>
 <button class="back-top" id="backTop" type="button" aria-label="<?= e(t('back_top')) ?>">↑</button>
-<script src="/assets/js/app.js"></script>
+<script src="/assets/js/app.js?v=v2"></script>
 </body>
 </html>

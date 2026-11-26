@@ -68,7 +68,7 @@ function init_db(PDO $pdo): void {
     $vc = fn($n) => $mysql ? "VARCHAR($n)" : 'TEXT';
 
     $tables = [
-        "CREATE TABLE IF NOT EXISTS users (id $ai, name $txt NOT NULL, phone {$vc(20)} NOT NULL UNIQUE, password_hash $txt NOT NULL, role {$vc(20)} NOT NULL, class_level {$vc(20)}, linked_student_phone {$vc(20)}, active $bool NOT NULL DEFAULT 1, is_super_admin $bool NOT NULL DEFAULT 0, created_at $ts)",
+        "CREATE TABLE IF NOT EXISTS users (id $ai, name $txt NOT NULL, phone {$vc(20)} NOT NULL UNIQUE, password_hash $txt NOT NULL, role {$vc(20)} NOT NULL, class_level {$vc(20)}, linked_student_phone {$vc(20)}, student_name {$vc(100)}, bkash_payment_no {$vc(20)}, payment_trxn_id {$vc(64)}, active $bool NOT NULL DEFAULT 1, is_super_admin $bool NOT NULL DEFAULT 0, created_at $ts)",
         "CREATE TABLE IF NOT EXISTS courses (id $ai, title $txt NOT NULL, class_level {$vc(20)}, paper {$vc(30)}, track {$vc(20)} NOT NULL DEFAULT 'academic', price_bdt $int, lessons $int, description $txt, active $bool NOT NULL DEFAULT 1)",
         "CREATE TABLE IF NOT EXISTS homework (id $ai, title $txt NOT NULL, class_level {$vc(20)}, details $txt, teacher_phone {$vc(20)}, created_at $ts)",
         "CREATE TABLE IF NOT EXISTS submissions (id $ai, homework_id $int, student_phone {$vc(20)}, student_name $txt, answer $txt, file_link $txt, status {$vc(20)} DEFAULT 'submitted', teacher_comment $txt, created_at $ts)",
@@ -98,7 +98,7 @@ function init_db(PDO $pdo): void {
     foreach ($tables as $sql) $pdo->exec($sql);
 
     // Light migrations for databases created by an earlier version.
-    $cols = ['users' => ['active', 'is_super_admin'], 'courses' => ['active', 'track'], 'testimonials' => ['status'], 'orders' => ['sender_phone', 'plan', 'track', 'valid_until']];
+    $cols = ['users' => ['active', 'is_super_admin', 'student_name', 'bkash_payment_no', 'payment_trxn_id'], 'courses' => ['active', 'track'], 'testimonials' => ['status'], 'orders' => ['sender_phone', 'plan', 'track', 'valid_until']];
     foreach ($cols as $table => $names) {
         $existing = [];
         if ($mysql) {
@@ -110,6 +110,9 @@ function init_db(PDO $pdo): void {
             if (!in_array($name, $existing, true)) {
                 $def = $name === 'status' ? "TEXT DEFAULT 'approved'" : ($mysql ? 'TINYINT(1) NOT NULL DEFAULT 1' : 'INTEGER NOT NULL DEFAULT 1');
                 if ($name === 'is_super_admin') $def = $mysql ? 'TINYINT(1) NOT NULL DEFAULT 0' : 'INTEGER NOT NULL DEFAULT 0';
+                if ($name === 'student_name') $def = $mysql ? 'VARCHAR(100)' : 'TEXT';
+                if ($name === 'bkash_payment_no') $def = $mysql ? 'VARCHAR(20)' : 'TEXT';
+                if ($name === 'payment_trxn_id') $def = $mysql ? 'VARCHAR(64)' : 'TEXT';
                 if ($name === 'sender_phone') $def = $mysql ? 'VARCHAR(20)' : 'TEXT';
                 if ($name === 'track') $def = $mysql ? "VARCHAR(20) NOT NULL DEFAULT 'academic'" : "TEXT NOT NULL DEFAULT 'academic'";
                 if ($name === 'plan') $def = $mysql ? "VARCHAR(20) NOT NULL DEFAULT 'once'" : "TEXT NOT NULL DEFAULT 'once'";

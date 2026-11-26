@@ -82,26 +82,27 @@ section{margin-top:40px}
 
 /* --- Header: logo | search | pill nav | lang + bell + avatar --- */
 .site-header{position:sticky;top:0;z-index:var(--z-header);background:var(--surface);border-bottom:1px solid var(--line-soft)}
-.header-row{max-width:1280px;margin:0 auto;padding:10px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.header-row{max-width:1280px;margin:0 auto;padding:8px 24px;display:flex;align-items:center;gap:12px;flex-wrap:nowrap}
 .brand{display:inline-flex;align-items:center;min-height:44px;text-decoration:none;flex-shrink:0}
 .brand-logo{background:none;border:0;border-radius:0;padding:0;display:inline-flex;align-items:center;line-height:0}
-.brand-logo img{display:block;height:46px;width:auto}
-.header-search{flex:1 1 220px;min-width:180px;max-width:420px;display:flex}
-.header-search input{flex:1;border:1px solid var(--line);border-radius:999px 0 0 999px;padding:10px 18px;font-size:15px;color:var(--ink);min-height:44px;border-right:0}
-.header-search button{border:1px solid var(--line);border-left:0;background:var(--grey-soft);border-radius:0 999px 999px 0;padding:0 18px;font-weight:700;color:var(--ink);cursor:pointer;min-height:44px}
-.main-nav{display:flex;align-items:center;gap:2px;background:var(--grey-soft);border:1px solid var(--line-soft);border-radius:999px;padding:4px;flex-wrap:wrap}
-.main-nav a{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 14px;border-radius:999px;text-decoration:none;color:var(--ink);font-weight:600;font-size:15px;white-space:nowrap}
+.brand-logo img{display:block;height:40px;width:auto}
+.header-search{flex:1 1 160px;min-width:140px;max-width:300px;display:flex}
+.header-search input{flex:1;border:1px solid var(--line);border-radius:999px 0 0 999px;padding:10px 18px;font-size:15px;color:var(--ink);min-height:40px;border-right:0}
+.header-search button{border:1px solid var(--line);border-left:0;background:var(--grey-soft);border-radius:0 999px 999px 0;padding:0 18px;font-weight:700;color:var(--ink);cursor:pointer;min-height:40px}
+.main-nav{display:flex;align-items:center;gap:2px;background:var(--grey-soft);border:1px solid var(--line-soft);border-radius:999px;padding:4px;flex-wrap:nowrap;flex:0 0 auto}
+.main-nav a{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:6px 10px;border-radius:999px;text-decoration:none;color:var(--ink);font-weight:600;font-size:14px;white-space:nowrap}
 .main-nav a:hover{background:#fff}
 .main-nav a[aria-current="page"]{background:var(--ink);color:#fff}
-.header-right{display:flex;align-items:center;gap:10px;margin-left:auto}
+.header-right{display:flex;align-items:center;gap:8px;margin-left:auto;flex:0 0 auto}
+.header-right .btn{padding:9px 16px;min-height:40px;font-size:14px}
 .lang-switch{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
-.lang-switch a{display:inline-flex;align-items:center;min-height:40px;padding:6px 14px;text-decoration:none;color:var(--ink);font-weight:700;font-size:14px}
+.lang-switch a{display:inline-flex;align-items:center;min-height:36px;padding:6px 10px;text-decoration:none;color:var(--ink);font-weight:700;font-size:13px}
 .lang-switch a.active{background:var(--blue-dark);color:#fff}
-.bell{position:relative;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);color:var(--ink);text-decoration:none;background:#fff}
+.bell{position:relative;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);color:var(--ink);text-decoration:none;background:#fff}
 .bell:hover{background:var(--grey-soft)}
 .nav-badge{position:absolute;top:-4px;right:-4px;display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--red);color:#fff;font-size:12px;font-weight:700}
 .avatar-menu{position:relative}
-.avatar-btn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:6px 12px 6px 6px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:700;color:var(--ink)}
+.avatar-btn{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:6px 12px 6px 6px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:700;color:var(--ink)}
 .avatar-circle{width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-family:"Poppins",sans-serif}
 .avatar-dropdown{position:absolute;right:0;top:calc(100% + 8px);min-width:220px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);padding:8px;display:none;z-index:60}
 .avatar-menu.open .avatar-dropdown{display:block}
@@ -114,7 +115,7 @@ section{margin-top:40px}
    (small logo, language, bell, avatar), a compact search row, then a
    horizontally scrollable nav pill row. Content starts right below.
    On scroll the header shrinks to a mini-bar (search row hides). --- */
-@media(max-width:900px){
+@media(max-width:1100px){
   .container{padding:0 16px 40px}
   .announce{font-size:13px;padding:8px 40px 8px 12px}
   .header-row{gap:8px;padding:8px 12px}
@@ -177,6 +178,7 @@ section{margin-top:40px}
 /* --- Hero: two columns, big bold headline with coloured highlight --- */
 .hero{padding:32px 0 0}
 .hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:32px;align-items:center}
+.hero-single{max-width:760px;animation:fade-up .25s ease-out both}
 @media(max-width:900px){.hero-grid{grid-template-columns:1fr}}
 .hero-eyebrow{display:inline-flex;gap:8px;align-items:center;background:var(--blue-soft);color:var(--blue-dark);border:1px solid #C2DBFF;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:700;letter-spacing:.02em}
 .hero-eyebrow i{width:9px;height:9px;background:var(--red);border-radius:50%;display:inline-block}
@@ -548,10 +550,10 @@ input:focus,select:focus,textarea:focus{outline:3px solid var(--blue);outline-of
    Reference design components (v3, 2026-11-26)
    ========================================================================== */
 /* --- Icon buttons in the header: theme toggle, burger, bell --- */
-.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-size:19px;text-decoration:none;flex-shrink:0}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-size:19px;text-decoration:none;flex-shrink:0}
 .icon-btn:hover{background:var(--grey-soft)}
 .burger{display:none}
-@media(max-width:900px){.burger{display:inline-flex}}
+@media(max-width:1100px){.burger{display:inline-flex}}
 /* --- "আরও ▾" popover in the pill nav --- */
 .more-menu{position:relative}
 .more-menu .more-pop{position:absolute;right:0;top:calc(100% + 8px);min-width:220px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-lg);padding:8px;display:none;z-index:60}

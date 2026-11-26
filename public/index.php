@@ -313,10 +313,25 @@ if ($path === '/register') {
         $name = post('name'); $phone = digits_only(post('phone')); $password = $_POST['password'] ?? '';
         // On a role subdomain, registration is for that role only.
         $role = $sub_role ?? (in_array(post('role'), ['student', 'parent', 'teacher'], true) ? post('role') : 'student');
-        $class_level = post('class_level'); $linked = digits_only(post('linked_student_phone'));
+        $class_level = post('class_level');
+        // Role-conditional fields (server-side is the real gate — the form's
+        // JS only shows/hides them). Class is required for students and
+        // parents; parents also give their child's name, a 13-digit bKash
+        // payment number (01 + 11 digits) and the payment Trxn ID.
+        $student_name = trim($_POST['student_name'] ?? '');
+        $bkash_no = digits_only(post('bkash_payment_no'));
+        $trxn_id = trim($_POST['payment_trxn_id'] ?? '');
         if ($name === '' || strlen($phone) < 11 || strlen($password) < 4) {
             flash(t('fill_all'));
             redirect('/register');
+        }
+        $valid_classes = ['6', '7', '8', '9-10', '11-12'];
+        if ($role === 'student') {
+            if (!in_array($class_level, $valid_classes, true)) { flash(t('reg_class_required')); redirect('/register'); }
+        } elseif ($role === 'parent') {
+            if ($student_name === '' || !in_array($class_level, $valid_classes, true)) { flash(t('reg_parent_required')); redirect('/register'); }
+            if (!preg_match('/^01\d{11}$/', $bkash_no)) { flash(t('reg_bkash_invalid')); redirect('/register'); }
+            if ($trxn_id === '') { flash(t('reg_trxn_required')); redirect('/register'); }
         }
         if ($role === 'teacher') {
             $existing = (int)db()->query("SELECT COUNT(*) FROM users WHERE role='teacher'")->fetchColumn();
@@ -324,8 +339,8 @@ if ($path === '/register') {
         }
         $is_first_teacher = $role === 'teacher' && (int)db()->query("SELECT COUNT(*) FROM users WHERE role='teacher'")->fetchColumn() === 0;
         try {
-            run('INSERT INTO users (name, phone, password_hash, role, class_level, linked_student_phone, is_super_admin, created_at) VALUES (?,?,?,?,?,?,?,?)',
-                [$name, $phone, password_hash($password, PASSWORD_DEFAULT), $role, $class_level, $linked ?: null, $is_first_teacher ? 1 : 0, now_str()]);
+            run('INSERT INTO users (name, phone, password_hash, role, class_level, student_name, bkash_payment_no, payment_trxn_id, is_super_admin, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)',
+                [$name, $phone, password_hash($password, PASSWORD_DEFAULT), $role, $class_level ?: null, $role === 'parent' ? $student_name : null, $role === 'parent' ? $bkash_no : null, $role === 'parent' ? $trxn_id : null, $is_first_teacher ? 1 : 0, now_str()]);
             $_SESSION['user_id'] = (int)db()->lastInsertId();
             // Registering logs you in — keep the login for 30 days, like other sites.
             issue_remember_token((int)$_SESSION['user_id']);

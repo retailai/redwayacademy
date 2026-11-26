@@ -206,4 +206,41 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   });
+
+  // Register form: role-conditional fields (progressive disclosure).
+  // Student: class only. Parent: student name + class + bKash payment no;
+  // the Trxn ID field appears only after a valid 13-digit bKash number
+  // starting with 01. Teacher: none of them. Server-side validation is
+  // the real gate — this only shows/hides the fields.
+  var regForm = document.getElementById("registerForm");
+  if (regForm) {
+    var roleEl = document.getElementById("role");
+    var fieldClass = document.getElementById("fieldClass");
+    var fieldStudent = document.getElementById("fieldStudentName");
+    var fieldBkash = document.getElementById("fieldBkash");
+    var fieldTrxn = document.getElementById("fieldTrxn");
+    var classEl = document.getElementById("class_level");
+    var studentEl = document.getElementById("student_name");
+    var bkashEl = document.getElementById("bkash_payment_no");
+    var trxnEl = document.getElementById("payment_trxn_id");
+    var BKASH_RE = /^01\d{11}$/;
+    var digitsOnly = function (v) { return (v || "").replace(/\D/g, ""); };
+    var syncRegister = function () {
+      var role = roleEl ? roleEl.value : "";
+      var isStudent = role === "student";
+      var isParent = role === "parent";
+      if (fieldClass) fieldClass.hidden = !(isStudent || isParent);
+      if (classEl) classEl.required = isStudent || isParent;
+      if (fieldStudent) fieldStudent.hidden = !isParent;
+      if (studentEl) studentEl.required = isParent;
+      if (fieldBkash) fieldBkash.hidden = !isParent;
+      if (bkashEl) bkashEl.required = isParent;
+      var bkashOk = isParent && bkashEl && BKASH_RE.test(digitsOnly(bkashEl.value));
+      if (fieldTrxn) fieldTrxn.hidden = !bkashOk;
+      if (trxnEl) trxnEl.required = !!bkashOk;
+    };
+    if (roleEl) roleEl.addEventListener("change", syncRegister);
+    if (bkashEl) bkashEl.addEventListener("input", syncRegister);
+    syncRegister();
+  }
 });
