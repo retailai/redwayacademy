@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/style.css?v=v3">
+<link rel="stylesheet" href="/assets/css/style.css?v=v4">
 </head>
 <body data-soon-msg="<?= e(t('soon_msg')) ?>">
 <a class="skip-link" href="#main">Skip to main content</a>
@@ -117,7 +117,7 @@
       <p><?= t('foot_about') ?></p>
     </div>
     <div class="footer-brand">
-      <span class="brand-logo"><img src="/assets/img/logo.png" alt="Redway Academy — Mistakes Mark the Way" width="2400" height="819" loading="lazy"></span>
+      <span class="brand-badge"><img src="/assets/img/favicon.png" alt="" width="46" height="46" loading="lazy"><span class="word">redway<small>ACADEMY</small></span></span>
       <p style="margin-top:12px"><?= t('foot_about') ?></p>
       <div class="social-row" aria-label="Social links">
         <a href="https://wa.me/880<?= substr(CONTACT_PHONE, 1) ?>" aria-label="WhatsApp — <?= CONTACT_PHONE ?>" title="WhatsApp">W</a>
