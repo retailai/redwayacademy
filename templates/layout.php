@@ -123,7 +123,7 @@
     <div class="social-row" aria-label="Social links">
       <a href="https://wa.me/880<?= substr(CONTACT_PHONE, 1) ?>" aria-label="WhatsApp" title="WhatsApp">W</a>
       <a href="https://www.youtube.com/@RedwayAcademy" aria-label="YouTube" title="YouTube">▶</a>
-      <a href="#" data-soon aria-label="Facebook" title="<?= e(t('foot_fb_soon')) ?>">f</a>
+      <a href="https://www.facebook.com/profile.php?id=61596806529388" aria-label="Facebook" title="Facebook">f</a>
       <a href="https://www.linkedin.com/company/redwayacademy" aria-label="LinkedIn" title="LinkedIn">in</a>
       <a href="https://www.instagram.com/redwayacademy/" aria-label="Instagram" title="Instagram">◎</a>
       <a href="#" data-soon aria-label="TikTok" title="TikTok">♪</a>
