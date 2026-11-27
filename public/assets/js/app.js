@@ -27,21 +27,22 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Dark / light theme toggle — persisted in localStorage, default light.
-  const themeBtn = document.getElementById("themeToggle");
+  // Two buttons: #themeToggle in the header, #themeToggle2 in the drawer.
+  // Both toggle data-theme + localStorage "rw_theme" and stay in sync.
+  const themeBtns = [document.getElementById("themeToggle"), document.getElementById("themeToggle2")].filter(Boolean);
   const applyThemeIcon = () => {
-    if (!themeBtn) return;
     const dark = document.documentElement.getAttribute("data-theme") === "dark";
-    themeBtn.textContent = dark ? "☀" : "◐";
+    themeBtns.forEach((b) => { b.textContent = dark ? "☀" : "◐"; });
   };
   applyThemeIcon();
-  if (themeBtn) {
-    themeBtn.addEventListener("click", () => {
+  themeBtns.forEach((b) => {
+    b.addEventListener("click", () => {
       const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
       document.documentElement.setAttribute("data-theme", next);
       try { localStorage.setItem("rw_theme", next); } catch (e) { /* ignore */ }
       applyThemeIcon();
     });
-  }
+  });
 
   // Mobile drawer (burger menu).
   const burger = document.getElementById("burgerBtn");

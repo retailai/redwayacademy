@@ -51,8 +51,8 @@
 [data-theme="dark"] .notebook .nb-correct{color:#81C995}
 [data-theme="dark"] .track-cover .thumb-badge{background:rgba(32,33,36,.92);color:#E8EAED}
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;font-family:"Hind Siliguri",system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;overflow-x:hidden}
+html{scroll-behavior:smooth;overflow-x:hidden;overflow-x:clip}
+body{margin:0;font-family:"Hind Siliguri",system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;overflow-x:hidden;overflow-x:clip}
 h1,h2,h3{font-family:"Poppins","Hind Siliguri",sans-serif;line-height:1.15;margin:0}
 h1{font-size:clamp(2.25rem,5vw,3.5rem);letter-spacing:-.02em}
 h2{font-size:clamp(1.5rem,3vw,2rem);margin-top:28px}
@@ -111,27 +111,29 @@ section{margin-top:40px}
 .avatar-dropdown .who{padding:8px 12px;border-bottom:1px solid var(--line-soft);margin-bottom:4px}
 .avatar-dropdown .who b{display:block}
 .avatar-dropdown .who span{color:var(--muted);font-size:13px}
-/* --- Compact mobile header (Learning Bangladesh style): one short top row
-   (small logo, language, bell, avatar), a compact search row, then a
-   horizontally scrollable nav pill row. Content starts right below.
-   On scroll the header shrinks to a mini-bar (search row hides). --- */
+/* --- One-row compact mobile header (model FIX, verified at 375px):
+   burger | logo | search | language | dark-mode | profile in a single row;
+   nav pills + login/register live only in the drawer below 1100px.
+   Replaces the old rules that put search/nav on flex-basis:100% rows
+   under a flex-wrap:nowrap header-row (page grew to 965px at 375px). --- */
 @media(max-width:1100px){
   .container{padding:0 16px 40px}
   .announce{font-size:13px;padding:8px 40px 8px 12px}
-  .header-row{gap:8px;padding:8px 12px}
-  .brand-logo img{height:32px}
+  .header-row{flex-wrap:nowrap;gap:8px;padding:8px 12px}
+  .header-row>*{min-width:0}
+  .main-nav{display:none}
+  .header-right .btn{display:none}
+  .brand-logo img{height:30px}
   .header-right{gap:6px}
-  .header-right .btn{padding:10px 14px;min-height:40px;font-size:14px}
-  .lang-switch a{min-height:40px;padding:6px 10px;font-size:13px}
-  .avatar-btn{padding:4px;min-height:40px}
+  .lang-switch a{min-height:32px;padding:4px 8px;font-size:12px}
+  .avatar-btn{padding:4px;min-height:36px}
   .avatar-btn .avatar-name{display:none}
   .avatar-circle{width:32px;height:32px}
-  .bell{width:40px;height:40px}
-  .header-search{order:3;flex-basis:100%;max-width:none}
-  .header-search input,.header-search button{min-height:40px}
-  .main-nav{order:4;flex-basis:100%;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
-  .main-nav::-webkit-scrollbar{display:none}
-  .main-nav a{flex-shrink:0;min-height:40px;padding:6px 12px;font-size:14px}
+  .bell{width:36px;height:36px}
+  .header-search{order:0;flex:1 1 auto;flex-basis:auto;max-width:none;min-width:0}
+  .header-search input{min-height:36px;padding:8px 12px;font-size:14px;min-width:0}
+  .header-search button{min-height:36px;padding:0 12px;font-size:13px}
+  .burger,.header-right #themeToggle,.header-right .profile-btn{width:36px;height:36px;min-height:36px}
   /* Shrunk mini-bar while scrolling: search row hides, logo gets smaller. */
   .site-header.scrolled .header-search{display:none}
   .site-header.scrolled .header-row{padding-top:6px;padding-bottom:6px}
@@ -509,7 +511,7 @@ input:focus,select:focus,textarea:focus{outline:3px solid var(--blue);outline-of
 .site-footer p{margin:0 0 8px;color:var(--muted);font-size:14px}
 .social-row{display:flex;gap:10px;margin-top:14px}
 .social-row a{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:#fff;display:inline-flex;align-items:center;justify-content:center;color:var(--ink);text-decoration:none;font-weight:800}
-.social-row a:hover{background:var(--blue-soft);color:var(--blue-dark)}
+.social-row a:hover{color:var(--blue-dark)}
 .copyright-bar{background:var(--ink);color:#fff;text-align:center;font-size:14px;padding:14px 16px}
 .copyright-bar p{margin:0;color:#fff;max-width:none}
 
@@ -671,3 +673,68 @@ input:focus,select:focus,textarea:focus{outline:3px solid var(--blue);outline-of
 .tst-dots{display:flex;gap:6px;justify-content:center;margin-top:8px}
 .tst-dots button{width:10px;height:10px;border-radius:50%;border:0;background:var(--line);cursor:pointer;padding:0;min-height:10px}
 .tst-dots button.on{background:var(--blue)}
+
+/* ==========================================================================
+   Ported from the preview model FIX block (model/build.py, verified at 375px).
+   Model-only rules (.preview-bar, .demo-*) are NOT ported. Where the FIX
+   block's first pass and its later one-row pass disagreed, the later
+   (effective) rule is ported: header stays one row (nowrap), the theme
+   toggle stays visible at 32px, both language links stay visible compact,
+   logo is 22px at <=640px.
+   ========================================================================== */
+/* One-row compact header: profile icon sizes (20px desktop, 16px <=640px). */
+.profile-btn svg{width:20px;height:20px;display:block}
+@media(max-width:640px){
+  .header-row{gap:5px;padding:6px 8px}
+  .brand{min-height:36px}
+  .brand-logo img{height:22px}
+  .burger{width:32px;height:32px;min-height:32px;font-size:16px}
+  .header-search input{min-height:32px;padding:6px 8px;font-size:13px}
+  .header-search button{min-height:32px;padding:0 7px;font-size:12px}
+  .lang-switch a,.lang-switch a.active{display:inline-flex;min-height:28px;padding:3px 6px;font-size:11px}
+  .header-right{gap:5px}
+  .header-right #themeToggle{display:inline-flex;width:32px;height:32px;min-height:32px;font-size:15px}
+  .header-right .profile-btn{width:32px;height:32px;min-height:32px}
+  .profile-btn svg{width:16px;height:16px}
+  .bell{width:32px;height:32px}
+  .avatar-btn{min-height:32px;padding:3px}
+  .avatar-circle{width:26px;height:26px;font-size:12px}
+  .toast{max-width:calc(100vw - 32px)}
+}
+/* Drawer tools row (language switcher + second theme toggle live here). */
+.drawer .drawer-tools{display:flex;gap:8px;align-items:center;margin:12px 0 4px;flex-wrap:wrap}
+.drawer .drawer-tools .lang-switch a{min-height:40px}
+/* Course card banners (Canva, Google colours only). */
+.track-cover img.track-banner{width:100%;height:100%;object-fit:cover;display:block}
+/* Dimmed-until-Phase-2 links + Phase 2 tag. */
+.dimmed{opacity:.55}
+.dimmed:hover{opacity:.75}
+.phase2-tag{display:inline-block;font-size:11px;font-weight:700;line-height:1;padding:3px 7px;border-radius:999px;background:var(--grey-soft);color:var(--grey);border:1px solid var(--line);margin-left:6px;vertical-align:middle;white-space:nowrap}
+/* Footer social icons: NO blue box — icons sit directly on the footer.
+   Neutralises the old .footer-brand box styles above. */
+.footer-brand{background:none;border-radius:0;padding:0}
+.footer-brand .social-row a{border:0;color:#fff}
+.footer-brand .social-row a:hover{color:#fff}
+/* 6 social icons fit at 375px: the row wraps instead of clipping. */
+.social-row{flex-wrap:wrap}
+/* Social icons: SOLID brand-colour circles with WHITE glyphs, 48px,
+   soft shadow, hover lift. */
+.social-row a{width:48px;height:48px;border:0;color:#fff;box-shadow:0 3px 8px rgba(60,64,67,.25);transition:transform .18s ease,box-shadow .18s ease}
+.social-row a:hover{transform:translateY(-3px);box-shadow:0 8px 16px rgba(60,64,67,.35);color:#fff}
+.social-row a[aria-label="WhatsApp"]{background:#25D366}
+.social-row a[aria-label="YouTube"]{background:#FF0000}
+.social-row a[aria-label="Facebook"]{background:#1877F2}
+.social-row a[aria-label="LinkedIn"]{background:#0A66C2}
+.social-row a[aria-label="Instagram"]{background:linear-gradient(45deg,#FEDA75,#FA7E1E,#D62976,#962FBF,#4F5BD5)}
+.social-row a[aria-label="TikTok"]{background:#000000}
+/* Community page: all six channels as solid brand-colour pill buttons. */
+.social-grid{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+.social-btn{display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:12px 22px;border-radius:999px;color:#fff;font-weight:700;font-size:16px;text-decoration:none;box-shadow:0 3px 8px rgba(60,64,67,.25);transition:transform .18s ease,box-shadow .18s ease}
+.social-btn:hover{transform:translateY(-3px);box-shadow:0 8px 16px rgba(60,64,67,.35);color:#fff}
+.social-btn svg{flex-shrink:0}
+.social-btn.wa{background:#25D366}
+.social-btn.yt{background:#FF0000}
+.social-btn.fb{background:#1877F2}
+.social-btn.li{background:#0A66C2}
+.social-btn.ig{background:linear-gradient(45deg,#FEDA75,#FA7E1E,#D62976,#962FBF,#4F5BD5)}
+.social-btn.tt{background:#000000}

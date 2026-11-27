@@ -5,13 +5,12 @@
 ?>
 <section class="hero" aria-labelledby="hero-heading">
   <div class="hero-single">
-    <span class="hero-eyebrow"><i aria-hidden="true"></i> <?= t('hero_eyebrow') ?></span>
     <h1 id="hero-heading"><span class="hl-red"><?= t('hero_a') ?></span><br><span class="hl-blue"><?= t('hero_b') ?></span></h1>
     <p class="slogan"><?= BRAND_SLOGAN_BN ?> • Mistakes Mark the Way</p>
     <p class="lead"><?= t('hero_intro') ?></p>
     <div class="hero-actions">
       <a class="btn btn-primary" href="/courses"><?= t('cta_courses') ?></a>
-      <?php if (!empty($retake_active)): ?><a class="btn btn-secondary" href="/retake"><?= t('cta_retake') ?></a><?php endif; ?>
+      <a class="btn btn-green" href="/register"><?= t('cta_register') ?></a>
     </div>
   </div>
 </section>

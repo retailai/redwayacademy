@@ -1,6 +1,6 @@
 <h1>Admin — Orders (bKash / Nagad)</h1>
 <p><a href="/admin">← Admin Panel</a></p>
-<p>Filter: <a href="/admin/orders">All</a> | <a href="/admin/orders?status=pending">Pending</a> | <a href="/admin/orders?status=verified">Verified</a> | <a href="/admin/orders?status=rejected">Rejected</a> — showing: <strong><?= e($status) ?></strong></p>
+<p>Filter: <a href="/admin/orders">All</a> | <a href="/admin/orders?status=pending">Pending</a> | <a href="/admin/orders?status=verified">Verified</a> — showing: <strong><?= e($status) ?></strong></p>
 <table class="admintable"><tr><th>ID</th><th>Course</th><th>Plan</th><th>Student</th><th>Method</th><th>TrxID</th><th>Sender number</th><th>Amount</th><th>Valid until</th><th>Status</th><th>Actions</th></tr>
 <?php foreach ($orders as $o): ?><tr>
 <td><?= (int)$o['id'] ?></td><td><?= e($o['course_title']) ?></td><td><?= ($o['plan'] ?? 'once') === 'monthly' ? t('monthly') : t('one_time') ?></td><td><?= e($o['student_name']) ?> (<?= e($o['student_phone']) ?>)</td>

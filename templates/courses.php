@@ -7,14 +7,15 @@
 // A logged-in student only ever sees their own class (route enforces it).
 ?>
 <nav class="crumb" aria-label="Breadcrumb"><a href="/"><?= t('crumb_home') ?></a> / <?= t('crumb_courses') ?></nav>
+<?php if ($step !== 'tracks'): ?>
 <h1 class="page-title"><?= $step === 'class' ? sprintf(t('academic_class'), num($class)) : t('courses_title') ?></h1>
-<p class="section-lead"><?= $step === 'class' ? t('courses_sub') : t('courses_sub') ?></p>
+<p class="section-lead"><?= t('courses_sub') ?></p>
+<?php endif; ?>
 
 <?php if ($step === 'tracks'): ?>
-<p class="section-lead" style="margin-top:8px"><strong><?= t('track_choose') ?></strong> — <?= t('track_choose_sub') ?></p>
 <div class="track-grid">
   <article class="card track-card track-spoken">
-    <div class="track-cover"><span class="thumb-badge"><?= t('track_spoken') ?></span><span class="thumb-letter" aria-hidden="true">Sp</span></div>
+    <div class="track-cover"><img class="track-banner" src="/assets/img/banner-spoken.png" alt="Spoken English — Speak with Confidence"></div>
     <div class="track-body">
       <h2><?= t('track_spoken_full') ?></h2>
       <p><?= t('track_spoken_d') ?></p>
@@ -33,7 +34,7 @@
     </div>
   </article>
   <article class="card track-card track-academic">
-    <div class="track-cover"><span class="thumb-badge"><?= t('track_academic') ?></span><span class="thumb-letter" aria-hidden="true">Ac</span></div>
+    <div class="track-cover"><img class="track-banner" src="/assets/img/banner-academic.png" alt="Academic English — NCTB English for Today, Grammar &amp; Composition"></div>
     <div class="track-body">
       <h2><?= t('track_academic_full') ?></h2>
       <p><?= t('track_academic_d') ?></p>

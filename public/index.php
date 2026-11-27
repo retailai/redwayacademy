@@ -306,6 +306,18 @@ if ($path === '/testimonials') {
     render('testimonials', ['title' => 'Reviews — Redway Academy',
         'testimonials' => q("SELECT * FROM testimonials WHERE status='approved' ORDER BY id DESC")]);
 }
+if ($path === '/community' && $method === 'GET') {
+    render('community', ['title' => t('nav_community') . ' — Redway Academy']);
+}
+if ($path === '/terms' && $method === 'GET') {
+    render('terms', ['title' => t('terms_title') . ' — Redway Academy']);
+}
+if ($path === '/privacy' && $method === 'GET') {
+    render('privacy', ['title' => t('priv_title') . ' — Redway Academy']);
+}
+if ($path === '/refund' && $method === 'GET') {
+    render('refund', ['title' => t('ref_title') . ' — Redway Academy']);
+}
 
 // --- Auth -------------------------------------------------------------------
 if ($path === '/register') {
@@ -815,7 +827,7 @@ if (preg_match('#^/admin/homework/(\d+)/delete$#', $path, $m) && $method === 'PO
 if ($path === '/admin/orders' && $method === 'GET') {
     admin_required();
     $status = $_GET['status'] ?? 'all';
-    $rows = in_array($status, ['pending', 'verified', 'rejected'], true)
+    $rows = in_array($status, ['pending', 'verified'], true)
         ? q('SELECT * FROM orders WHERE status=? ORDER BY id DESC', [$status])
         : q('SELECT * FROM orders ORDER BY id DESC');
     render('admin/orders', ['title' => 'Admin — Orders', 'orders' => $rows, 'status' => $status]);
@@ -824,17 +836,26 @@ if (preg_match('#^/admin/orders/(\d+)/verify$#', $path, $m) && $method === 'POST
     admin_required();
     $status = post('status', 'verified');
     if (!in_array($status, ['verified', 'rejected'], true)) abort_page(400, 'Invalid status.');
-    run('UPDATE orders SET status=? WHERE id=?', [$status, (int)$m[1]]);
     $row = q1('SELECT * FROM orders WHERE id=?', [(int)$m[1]]);
-    if ($row) {
-        // A verified monthly subscription runs 30 days from verification.
-        if ($status === 'verified' && ($row['plan'] ?? 'once') === 'monthly' && empty($row['valid_until'])) {
-            run('UPDATE orders SET valid_until=? WHERE id=?', [date('Y-m-d', strtotime('+30 days')), (int)$m[1]]);
-        }
-        notify($row['student_phone'], "Your payment for {$row['course_title']} was $status (TrxID {$row['trxid']}).", 'payment');
-        notify_parents_of($row['student_phone'], "Payment for {$row['student_name']} — {$row['course_title']} — was $status.", 'payment');
+    if (!$row) abort_page(404, 'Order not found.');
+    if ($status === 'rejected') {
+        // Rejected orders are removed from the panel (owner decision 2026-11-27):
+        // notify the student + parents first, then delete the row so it no
+        // longer stays in the orders list. The notifications stay.
+        notify($row['student_phone'], "Your payment for {$row['course_title']} was rejected (TrxID {$row['trxid']}).", 'payment');
+        notify_parents_of($row['student_phone'], "Payment for {$row['student_name']} — {$row['course_title']} — was rejected.", 'payment');
+        run('DELETE FROM orders WHERE id=?', [(int)$m[1]]);
+        flash('Order rejected and removed.');
+        redirect('/admin/orders');
     }
-    flash("Order marked $status.");
+    run('UPDATE orders SET status=? WHERE id=?', [$status, (int)$m[1]]);
+    // A verified monthly subscription runs 30 days from verification.
+    if (($row['plan'] ?? 'once') === 'monthly' && empty($row['valid_until'])) {
+        run('UPDATE orders SET valid_until=? WHERE id=?', [date('Y-m-d', strtotime('+30 days')), (int)$m[1]]);
+    }
+    notify($row['student_phone'], "Your payment for {$row['course_title']} was verified (TrxID {$row['trxid']}).", 'payment');
+    notify_parents_of($row['student_phone'], "Payment for {$row['student_name']} — {$row['course_title']} — was verified.", 'payment');
+    flash('Order marked verified.');
     redirect('/admin/orders');
 }
 if ($path === '/admin/retakes' && $method === 'GET') {

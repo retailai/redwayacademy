@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/style.css?v=v5">
+<link rel="stylesheet" href="/assets/css/style.css?v=v6">
 </head>
 <body data-soon-msg="<?= e(t('soon_msg')) ?>">
 <a class="skip-link" href="#main">Skip to main content</a>
@@ -34,16 +34,15 @@
     <nav class="main-nav" aria-label="Main navigation">
       <a href="/"<?php if (($_SERVER['REQUEST_URI'] ?? '/') === '/'): ?> aria-current="page"<?php endif; ?>><?= t('nav_home') ?></a>
       <a href="/courses"<?php if (str_starts_with($_SERVER['REQUEST_URI'] ?? '', '/course') || str_starts_with($_SERVER['REQUEST_URI'] ?? '', '/buy')): ?> aria-current="page"<?php endif; ?>><?= t('nav_courses') ?></a>
+      <a href="/homework"><?= t('nav_homework') ?></a>
       <?php if (!empty($retake_active)): ?><a href="/retake"><?= t('nav_retake') ?></a><?php endif; ?>
       <a href="/testimonials"><?= t('nav_reviews') ?></a>
-      <a href="/homework"><?= t('nav_homework') ?></a>
       <div class="more-menu" id="moreMenu">
         <a href="#" id="moreBtn" aria-haspopup="true" aria-expanded="false"><?= t('nav_more') ?> ▾</a>
         <div class="more-pop" role="menu" aria-label="<?= e(t('nav_more')) ?>">
-          <a href="/checkin" role="menuitem"><?= t('nav_checkin') ?></a>
-          <a href="#" role="menuitem" data-soon><?= t('nav_free_class') ?></a>
-          <a href="#" role="menuitem" data-soon><?= t('nav_notes') ?></a>
-          <a href="#" role="menuitem" data-soon><?= t('nav_community') ?></a>
+          <a href="#" role="menuitem" data-soon class="dimmed"><span><?= t('nav_checkin') ?></span> <span class="phase2-tag"><?= t('checkin_phase2') ?></span></a>
+          <a href="#" role="menuitem" data-soon class="dimmed"><span><?= t('nav_notes') ?></span> <span class="phase2-tag"><?= t('notes_later') ?></span></a>
+          <a href="/community" role="menuitem"><?= t('nav_community') ?></a>
         </div>
       </div>
     </nav>
@@ -75,6 +74,7 @@
         <a class="btn btn-secondary" href="/login"><?= t('nav_login') ?></a>
         <a class="btn" href="/register"><?= t('nav_register') ?></a>
       <?php endif; ?>
+      <a class="icon-btn profile-btn" id="profileBtn" href="<?= $current_user ? e(dashboard_url($current_user)) : '/login' ?>" aria-label="Profile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
     </div>
   </div>
 </header>
@@ -84,16 +84,19 @@
     <span class="brand-logo"><img src="/assets/img/logo.png" alt="Redway Academy" width="1568" height="535"></span>
     <button class="icon-btn" type="button" id="drawerClose" aria-label="Close">✕</button>
   </div>
+  <div class="drawer-tools"><span class="lang-switch" role="group" aria-label="Language / ভাষা">
+    <a href="<?= e(url_with_query(['lang' => 'bn'])) ?>"<?php if (lang_is_bn()): ?> class="active" aria-current="true"<?php endif; ?>><?= t('lang_bangla') ?></a>
+    <a href="<?= e(url_with_query(['lang' => 'en'])) ?>"<?php if (!lang_is_bn()): ?> class="active" aria-current="true"<?php endif; ?>><?= t('lang_english') ?></a>
+  </span><button class="icon-btn" type="button" id="themeToggle2" aria-label="Dark / light mode">◐</button></div>
   <nav>
     <a href="/"<?php if (($_SERVER['REQUEST_URI'] ?? '/') === '/'): ?> aria-current="page"<?php endif; ?>><?= t('nav_home') ?></a>
     <a href="/courses"><?= t('nav_courses') ?></a>
+    <a href="/homework"><?= t('nav_homework') ?></a>
     <?php if (!empty($retake_active)): ?><a href="/retake"><?= t('nav_retake') ?></a><?php endif; ?>
     <a href="/testimonials"><?= t('nav_reviews') ?></a>
-    <a href="/homework"><?= t('nav_homework') ?></a>
-    <a href="/checkin"><?= t('nav_checkin') ?></a>
-    <a href="#" data-soon><?= t('nav_free_class') ?></a>
-    <a href="#" data-soon><?= t('nav_notes') ?></a>
-    <a href="#" data-soon><?= t('nav_community') ?></a>
+    <a href="#" data-soon class="dimmed"><span><?= t('nav_checkin') ?></span> <span class="phase2-tag"><?= t('checkin_phase2') ?></span></a>
+    <a href="#" data-soon class="dimmed"><span><?= t('nav_notes') ?></span> <span class="phase2-tag"><?= t('notes_later') ?></span></a>
+    <a href="/community"><?= t('nav_community') ?></a>
   </nav>
   <div class="drawer-actions">
     <?php if ($current_user): ?>
@@ -114,15 +117,14 @@
     <div>
       <p style="margin-top:4px"><strong><?= t('foot_motto') ?></strong></p>
       <p><?= t('foot_motto2') ?></p>
-      <p><?= t('foot_about') ?></p>
     </div>
-    <div class="footer-brand">
-      <div class="social-row" aria-label="Social links">
-        <a href="https://wa.me/880<?= substr(CONTACT_PHONE, 1) ?>" aria-label="WhatsApp — <?= CONTACT_PHONE ?>" title="WhatsApp">W</a>
-        <a href="https://www.youtube.com/@RedwayAcademy" aria-label="YouTube — Redway Academy" title="YouTube">▶</a>
-        <a href="#" data-soon aria-label="Facebook — <?= e(t('foot_fb_soon')) ?>" title="<?= e(t('foot_fb_soon')) ?>">f</a>
-        <a href="tel:<?= CONTACT_PHONE ?>" aria-label="Call — <?= CONTACT_PHONE ?>" title="Call">☎</a>
-      </div>
+    <div class="social-row" aria-label="Social links">
+      <a href="https://wa.me/880<?= substr(CONTACT_PHONE, 1) ?>" aria-label="WhatsApp" title="WhatsApp">W</a>
+      <a href="https://www.youtube.com/@RedwayAcademy" aria-label="YouTube" title="YouTube">▶</a>
+      <a href="#" data-soon aria-label="Facebook" title="<?= e(t('foot_fb_soon')) ?>">f</a>
+      <a href="https://www.linkedin.com/company/redwayacademy" aria-label="LinkedIn" title="LinkedIn">in</a>
+      <a href="https://www.instagram.com/redwayacademy/" aria-label="Instagram" title="Instagram">◎</a>
+      <a href="#" data-soon aria-label="TikTok" title="TikTok">♪</a>
     </div>
     <div>
       <h3><?= t('foot_org') ?></h3>
@@ -137,7 +139,7 @@
       <h3><?= t('foot_explore') ?></h3>
       <ul>
         <li><a href="/homework"><?= t('nav_homework') ?></a></li>
-        <li><a href="/checkin"><?= t('nav_checkin') ?></a></li>
+        <li><a href="#" data-soon class="dimmed"><span><?= t('nav_checkin') ?></span> <span class="phase2-tag"><?= t('checkin_phase2') ?></span></a></li>
         <li><a href="/login"><?= t('nav_login') ?></a></li>
         <li><a href="/register"><?= t('nav_register') ?></a></li>
       </ul>
@@ -148,11 +150,12 @@
       <?= CONTACT_ADDRESS ?><br>
       <a href="mailto:info@redwayacademy.com">info@redwayacademy.com</a><br>
       bKash / Nagad: <?= CONTACT_PHONE ?></p>
+      <ul><li><a href="/terms"><?= t('foot_terms') ?></a></li><li><a href="/privacy"><?= t('foot_privacy') ?></a></li><li><a href="#" data-soon class="dimmed"><span><?= t('foot_refund') ?></span> <span class="phase2-tag"><?= t('checkin_phase2') ?></span></a></li></ul>
     </div>
   </div>
   <div class="copyright-bar"><p><?= sprintf(t('rights'), date('Y')) ?> — Mistakes Mark the Way</p></div>
 </footer>
 <button class="back-top" id="backTop" type="button" aria-label="<?= e(t('back_top')) ?>">↑</button>
-<script src="/assets/js/app.js?v=v2"></script>
+<script src="/assets/js/app.js?v=v3"></script>
 </body>
 </html>
