@@ -17,6 +17,7 @@ $dash_links = [
     ['/checkin', t('side_checkin')],
     ['/admin', t('side_admin')],
     ['/admin/teachers', t('side_add_teacher')],
+    ['/logout', t('menu_logout')],
 ];
 ?>
 <div class="dash-layout">

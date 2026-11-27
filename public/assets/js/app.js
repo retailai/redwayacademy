@@ -129,6 +129,22 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Idle auto-logout after 30 minutes without activity — only when logged
+  // in (the avatar menu exists only for logged-in users). Any activity
+  // resets the timer; on fire, log out via /logout?idle=1, which flashes
+  // the idle message and lands on /login with the phone prefilled.
+  const IDLE_MS = 30 * 60 * 1000;
+  if (document.getElementById("avatarMenu")) {
+    let idleTimer = null;
+    const resetIdle = () => {
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => { location.href = "/logout?idle=1"; }, IDLE_MS);
+    };
+    ["mousemove", "keydown", "touchstart", "scroll", "click"].forEach((ev) =>
+      window.addEventListener(ev, resetIdle, { passive: true }));
+    resetIdle();
+  }
+
   // Back to top.
   const top = document.getElementById("backTop");
   if (top) {

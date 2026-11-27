@@ -7,7 +7,7 @@
   <form method="post" action="/login">
     <input type="hidden" name="csrf_token" value="<?= e($csrf_token) ?>">
     <label for="phone"><?= t('phone') ?></label>
-    <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required placeholder="01XXXXXXXXX">
+    <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required placeholder="01XXXXXXXXX" value="<?= e($_COOKIE['rw_last_phone'] ?? '') ?>">
     <span class="field-hint" id="phone-hint"><?= t('phone_hint') ?></span>
     <label for="password"><?= t('password') ?></label>
     <input id="password" name="password" type="password" autocomplete="current-password" required>
@@ -18,7 +18,6 @@
       <option value="teacher"<?= ($subdomain_role ?? null) === 'teacher' ? ' selected' : '' ?>><?= t('role_teacher') ?></option>
     </select>
     <span class="field-hint"><?= t('login_as_hint') ?></span>
-    <label class="remember"><input type="checkbox" name="remember" value="1" checked> <?= t('remember_me') ?></label>
     <div class="form-actions"><button class="btn" type="submit"><?= t('login_btn') ?></button></div>
   </form>
   <p><?= t('no_account') ?> <a href="/register"><?= t('nav_register') ?></a></p>

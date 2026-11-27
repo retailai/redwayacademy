@@ -8,6 +8,7 @@
 <?php else: ?>
 <h1 class="page-title"><?= t('retake_title') ?></h1>
 <p class="section-lead"><?= sprintf(t('retake_sub'), MAX_UPLOAD_MB) ?></p>
+<div class="auth-card">
 <form method="post" action="/retake" enctype="multipart/form-data">
   <input type="hidden" name="csrf_token" value="<?= e($csrf_token) ?>">
   <label><?= t('student_name') ?> <input name="student_name" required></label>
@@ -21,4 +22,5 @@
   <label><?= t('tabulation') ?> <input type="file" name="tabulation" accept=".pdf,.jpg,.jpeg,.png"></label>
   <button class="btn" type="submit"><?= t('submit_retake') ?></button>
 </form>
+</div>
 <?php endif; ?>

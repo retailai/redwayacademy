@@ -1,6 +1,7 @@
 <h1 class="page-title"><?= t('homework_title') ?></h1>
 <?php if ($current_user['role'] === 'teacher'): ?>
 <h2><?= t('create_homework') ?></h2>
+<div class="auth-card">
 <form method="post" action="/homework">
   <input type="hidden" name="csrf_token" value="<?= e($csrf_token) ?>">
   <label><?= t('hw_title') ?> <input name="title" required></label>
@@ -8,6 +9,7 @@
   <label><?= t('hw_details') ?> <textarea name="details" rows="4"></textarea></label>
   <button class="btn" type="submit"><?= t('create_homework') ?></button>
 </form>
+</div>
 <?php endif; ?>
 <h2><?= t('all_homework') ?></h2>
 <div class="dash-list">

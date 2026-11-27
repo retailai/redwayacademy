@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/style.css?v=v6">
+<link rel="stylesheet" href="/assets/css/style.css?v=v7">
 </head>
 <body data-soon-msg="<?= e(t('soon_msg')) ?>">
 <a class="skip-link" href="#main">Skip to main content</a>
@@ -64,7 +64,8 @@
           </button>
           <div class="avatar-dropdown" role="menu" aria-label="Account menu">
             <div class="who"><b><?= e($current_user['name']) ?></b><span><?= e($current_user['phone']) ?> • <?= e(role_label($current_user['role'])) ?><?php if ($is_super_admin): ?> • <?= t('super_admin') ?><?php endif; ?></span></div>
-            <a href="<?= e(dashboard_url($current_user)) ?>" role="menuitem"><?= t('menu_dashboard') ?></a>
+            <?php if ($current_user['role'] === 'student'): ?><a href="/my-courses" role="menuitem"><?= t('menu_my_courses') ?></a>
+            <?php else: ?><a href="<?= e(dashboard_url($current_user)) ?>" role="menuitem"><?= t('menu_dashboard') ?></a><?php endif; ?>
             <a href="/notifications" role="menuitem"><?= t('menu_notifications') ?><?php if ($unread_count): ?> (<?= (int)$unread_count ?>)<?php endif; ?></a>
             <?php if ($current_user['role'] === 'teacher'): ?><a href="/admin" role="menuitem"><?= t('nav_admin') ?></a><?php endif; ?>
             <a href="/logout" role="menuitem"><?= t('menu_logout') ?></a>
@@ -74,7 +75,7 @@
         <a class="btn btn-secondary" href="/login"><?= t('nav_login') ?></a>
         <a class="btn" href="/register"><?= t('nav_register') ?></a>
       <?php endif; ?>
-      <a class="icon-btn profile-btn" id="profileBtn" href="<?= $current_user ? e(dashboard_url($current_user)) : '/login' ?>" aria-label="Profile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+      <?php if (!$current_user): ?><a class="icon-btn profile-btn" id="profileBtn" href="/login" aria-label="Profile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a><?php endif; ?>
     </div>
   </div>
 </header>
@@ -100,7 +101,8 @@
   </nav>
   <div class="drawer-actions">
     <?php if ($current_user): ?>
-      <a class="btn" href="<?= e(dashboard_url($current_user)) ?>"><?= t('menu_dashboard') ?></a>
+      <?php if ($current_user['role'] === 'student'): ?><a class="btn" href="/my-courses"><?= t('menu_my_courses') ?></a>
+      <?php else: ?><a class="btn" href="<?= e(dashboard_url($current_user)) ?>"><?= t('menu_dashboard') ?></a><?php endif; ?>
       <a class="btn btn-secondary" href="/logout"><?= t('menu_logout') ?></a>
     <?php else: ?>
       <a class="btn" href="/login"><?= t('nav_login') ?></a>
@@ -156,6 +158,6 @@
   <div class="copyright-bar"><p><?= sprintf(t('rights'), date('Y')) ?> — Mistakes Mark the Way</p></div>
 </footer>
 <button class="back-top" id="backTop" type="button" aria-label="<?= e(t('back_top')) ?>">↑</button>
-<script src="/assets/js/app.js?v=v3"></script>
+<script src="/assets/js/app.js?v=v4"></script>
 </body>
 </html>

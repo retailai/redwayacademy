@@ -63,8 +63,3 @@
   </div>
 </section>
 <?php endif; ?>
-
-<section aria-labelledby="lesson-heading">
-  <h2 id="lesson-heading"><?= t('lesson_free_title') ?></h2>
-  <div class="dialogue"><p><?= t('lesson_free_body') ?></p></div>
-</section>

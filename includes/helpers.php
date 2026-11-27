@@ -133,6 +133,44 @@ function retake_campaign_active(): bool {
     return setting_get('retake_campaign_active', '1') === '1';
 }
 
+/** Extract a YouTube video ID from a watch / youtu.be / embed / shorts URL.
+ * Returns '' when the URL is not a YouTube link or the ID is malformed.
+ * Lessons have no videos yet — video_url is NULL until an admin pastes one. */
+function youtube_id(string $url): string {
+    $url = trim($url);
+    if ($url === '') return '';
+    $parts = parse_url($url);
+    if (!$parts || empty($parts['host'])) return '';
+    $host = strtolower(preg_replace('/^www\./', '', (string)$parts['host']));
+    $id = '';
+    if ($host === 'youtu.be') {
+        $id = trim((string)($parts['path'] ?? ''), '/');
+    } elseif ($host === 'youtube.com' || str_ends_with($host, '.youtube.com')) {
+        $path = (string)($parts['path'] ?? '');
+        if ($path === '/watch') {
+            parse_str((string)($parts['query'] ?? ''), $qs);
+            $id = (string)($qs['v'] ?? '');
+        } elseif (preg_match('#^/(embed|shorts|v)/([^/]+)#', $path, $m)) {
+            $id = $m[2];
+        }
+    }
+    return preg_match('/^[A-Za-z0-9_-]{11}$/', $id) ? $id : '';
+}
+
+/** First uncompleted lesson number for a student in a course.
+ * Returns 1 when nothing is done yet, or when everything is done (review). */
+function next_lesson_no(int $user_id, int $course_id): int {
+    $st = db()->prepare('SELECT COUNT(*) FROM lessons WHERE course_id=?');
+    $st->execute([$course_id]);
+    $total = (int)$st->fetchColumn();
+    if ($total < 1) return 1;
+    $done = lesson_progress($user_id, $course_id);
+    for ($n = 1; $n <= $total; $n++) {
+        if (!in_array($n, $done, true)) return $n;
+    }
+    return 1;
+}
+
 /** Enrollment: a verified bKash/Nagad order IS the enrollment.
  * A verified monthly subscription also enrols the student in EVERY course
  * of that track until its valid_until date (30 days from verification). */

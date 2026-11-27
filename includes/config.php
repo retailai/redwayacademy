@@ -47,8 +47,8 @@ define('DB_PASS', envv('DB_PASS', ''));
 define('UPLOAD_DIR', envv('UPLOAD_FOLDER', dirname(__DIR__) . '/uploads'));
 define('MAX_UPLOAD_MB', (int)envv('MAX_UPLOAD_MB', '8'));
 define('SESSION_LIFETIME', 8 * 3600); // 8 hours
-define('REMEMBER_LIFETIME', 30 * 86400); // 30 days — "remember me" persistent login
-define('REMEMBER_COOKIE', 'REDWAY_REMEMBER');
+define('IDLE_TIMEOUT', 30 * 60); // 30 minutes without activity → auto-logout
+define('LAST_PHONE_COOKIE', 'rw_last_phone'); // phone number only, for login prefill
 
 /**
  * Cookie domain shared by the main site and the role subdomains.

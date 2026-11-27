@@ -46,11 +46,18 @@ $ln = (int)$lesson['lesson_no'];
       <?php if ($ln < (int)$total): ?><a class="btn btn-primary" href="/course/<?= (int)$course['id'] ?>/lesson/<?= $ln + 1 ?>"><?= t('lp_next_lesson') ?> →</a><?php endif; ?>
     </div>
 
-    <div class="video-box" aria-label="<?= e(t('lp_video_soon')) ?>">
+    <?php $video_id = youtube_id((string)($lesson['video_url'] ?? '')); ?>
+    <?php if ($video_id !== ''): ?>
+    <div class="video-box">
+      <iframe src="https://www.youtube-nocookie.com/embed/<?= e($video_id) ?>" title="<?= e($lesson['title']) ?>" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    </div>
+    <?php else: ?>
+    <div class="video-box" aria-label="<?= e(t('video_coming_soon')) ?>">
       <div class="vb-ico" aria-hidden="true">▶</div>
-      <h3><?= t('lp_video_soon') ?></h3>
+      <h3><?= t('video_coming_soon') ?></h3>
       <p><?= t('lp_video_note') ?></p>
     </div>
+    <?php endif; ?>
 
     <div class="markdone-bar">
       <div class="md-txt">

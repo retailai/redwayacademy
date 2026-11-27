@@ -81,7 +81,7 @@ function init_db(PDO $pdo): void {
         "CREATE TABLE IF NOT EXISTS checkin_codes (id $ai, pin {$vc(10)} NOT NULL, class_level {$vc(20)}, teacher_phone {$vc(20)}, is_active $bool NOT NULL DEFAULT 1, created_at $ts)",
         "CREATE TABLE IF NOT EXISTS checkins (id $ai, student_phone {$vc(20)}, student_name $txt, class_level {$vc(20)}, pin {$vc(10)}, status {$vc(20)} DEFAULT 'pending', created_at $ts)",
         "CREATE TABLE IF NOT EXISTS announcements (id $ai, teacher_phone {$vc(20)}, message $txt, created_at $ts)",
-        "CREATE TABLE IF NOT EXISTS lessons (id $ai, course_id $int, lesson_no $int, title $txt NOT NULL, body $txt NOT NULL, created_at $ts)",
+        "CREATE TABLE IF NOT EXISTS lessons (id $ai, course_id $int, lesson_no $int, title $txt NOT NULL, body $txt NOT NULL, video_url $txt, created_at $ts)",
         // Lesson player: per-user done state + personal note (unique per user/course/lesson).
         "CREATE TABLE IF NOT EXISTS lesson_progress (id $ai, user_id $int NOT NULL, course_id $int NOT NULL, lesson_no $int NOT NULL, done $bool NOT NULL DEFAULT 0, note $txt, updated_at $ts, UNIQUE(user_id, course_id, lesson_no))",
         // Lesson player: per-user star rating of a course (1–5, one row per user/course).
@@ -98,7 +98,7 @@ function init_db(PDO $pdo): void {
     foreach ($tables as $sql) $pdo->exec($sql);
 
     // Light migrations for databases created by an earlier version.
-    $cols = ['users' => ['active', 'is_super_admin', 'student_name', 'bkash_payment_no', 'payment_trxn_id'], 'courses' => ['active', 'track'], 'testimonials' => ['status'], 'orders' => ['sender_phone', 'plan', 'track', 'valid_until']];
+    $cols = ['users' => ['active', 'is_super_admin', 'student_name', 'bkash_payment_no', 'payment_trxn_id'], 'courses' => ['active', 'track'], 'lessons' => ['video_url'], 'testimonials' => ['status'], 'orders' => ['sender_phone', 'plan', 'track', 'valid_until']];
     foreach ($cols as $table => $names) {
         $existing = [];
         if ($mysql) {
@@ -113,6 +113,7 @@ function init_db(PDO $pdo): void {
                 if ($name === 'student_name') $def = $mysql ? 'VARCHAR(100)' : 'TEXT';
                 if ($name === 'bkash_payment_no') $def = $mysql ? 'VARCHAR(20)' : 'TEXT';
                 if ($name === 'payment_trxn_id') $def = $mysql ? 'VARCHAR(64)' : 'TEXT';
+                if ($name === 'video_url') $def = $mysql ? 'VARCHAR(255)' : 'TEXT';
                 if ($name === 'sender_phone') $def = $mysql ? 'VARCHAR(20)' : 'TEXT';
                 if ($name === 'track') $def = $mysql ? "VARCHAR(20) NOT NULL DEFAULT 'academic'" : "TEXT NOT NULL DEFAULT 'academic'";
                 if ($name === 'plan') $def = $mysql ? "VARCHAR(20) NOT NULL DEFAULT 'once'" : "TEXT NOT NULL DEFAULT 'once'";

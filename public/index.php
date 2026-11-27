@@ -15,12 +15,28 @@ require_once __DIR__ . '/../includes/i18n.php';
 
 start_session();
 
+// --- Idle auto-logout: 30 minutes without activity ------------------------
+// A logged-in user whose last request was more than IDLE_TIMEOUT ago is
+// logged out and sent to /login with the idle message (their phone number
+// stays prefilled via the last-phone cookie). Otherwise the activity clock
+// restarts on every request. No session = no-op (login/logout/health).
+if (!empty($_SESSION['user_id'])) {
+    if (!empty($_SESSION['last_activity']) && time() - (int)$_SESSION['last_activity'] > IDLE_TIMEOUT) {
+        $idle_phone = q1('SELECT phone FROM users WHERE id=?', [(int)$_SESSION['user_id']])['phone'] ?? '';
+        logout_user();
+        if ($idle_phone !== '') set_last_phone_cookie((string)$idle_phone);
+        flash(t('logout_idle'));
+        redirect('/login');
+    }
+    $_SESSION['last_activity'] = time();
+}
+
 // --- Security headers (same policy as the Flask version) --------------------
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
-header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; frame-ancestors 'none'");
+header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; frame-src https://www.youtube-nocookie.com https://www.youtube.com; frame-ancestors 'none'");
 
 // --- Routing ----------------------------------------------------------------
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -354,8 +370,8 @@ if ($path === '/register') {
             run('INSERT INTO users (name, phone, password_hash, role, class_level, student_name, bkash_payment_no, payment_trxn_id, is_super_admin, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)',
                 [$name, $phone, password_hash($password, PASSWORD_DEFAULT), $role, $class_level ?: null, $role === 'parent' ? $student_name : null, $role === 'parent' ? $bkash_no : null, $role === 'parent' ? $trxn_id : null, $is_first_teacher ? 1 : 0, now_str()]);
             $_SESSION['user_id'] = (int)db()->lastInsertId();
-            // Registering logs you in — keep the login for 30 days, like other sites.
-            issue_remember_token((int)$_SESSION['user_id']);
+            $_SESSION['last_activity'] = time();
+            set_last_phone_cookie($phone);
         } catch (PDOException $e) {
             if (str_contains($e->getMessage(), 'Duplicate') || $e->getCode() === '23000') {
                 flash(t('phone_registered')); redirect('/login');
@@ -363,15 +379,15 @@ if ($path === '/register') {
             throw $e;
         }
         flash(sprintf(t('welcome'), $name, t('role_' . $role)));
-        redirect('/dashboard');
+        redirect($role === 'student' ? '/my-courses' : '/dashboard');
     }
     render('register', ['title' => 'Register — Redway Academy']);
 }
 if ($path === '/login') {
-    // Already logged in? Go to the dashboard — never show the login form again.
+    // Already logged in? Go to the student's My Courses, or own dashboard — never show the login form again.
     if ($method === 'GET') {
         $me = current_user();
-        if ($me) redirect(dashboard_url($me));
+        if ($me) redirect($me['role'] === 'student' ? '/my-courses' : dashboard_url($me));
     }
     if ($method === 'POST') {
         $phone = digits_only(post('phone')); $password = $_POST['password'] ?? '';
@@ -402,11 +418,10 @@ if ($path === '/login') {
             }
             session_regenerate_id(true);
             $_SESSION['user_id'] = (int)$u['id'];
-            // "Remember me" is on by default — stay logged in for 30 days,
-            // across browser closes and across the role subdomains.
-            if (isset($_POST['remember'])) issue_remember_token((int)$u['id']);
+            $_SESSION['last_activity'] = time();
+            set_last_phone_cookie($phone);
             flash(sprintf(t('welcome_back'), $u['name']));
-            redirect('/dashboard');
+            redirect($u['role'] === 'student' ? '/my-courses' : '/dashboard');
         }
         record_failed_login($phone);
         flash(t('wrong_login'));
@@ -415,7 +430,8 @@ if ($path === '/login') {
 }
 if ($path === '/logout' && $method === 'GET') {
     logout_user();
-    redirect('/');
+    if (($_GET['idle'] ?? '') === '1') flash(t('logout_idle'));
+    redirect('/login');
 }
 
 // --- Dashboard / progress / feedback / notifications ------------------------
@@ -464,6 +480,61 @@ if ($path === '/dashboard/student' && $method === 'GET') {
 if ($path === '/dashboard/parent' && $method === 'GET') {
     $u = role_required('parent');
     render('dashboard_parent', build_dashboard_ctx($u));
+}
+// --- My Courses: the student's two course previews ------------------------
+// Students only — a teacher/parent is sent to their own dashboard, same as
+// role_required() on the dashboard pages. Two cards only: Spoken English
+// (one course for all) and Academic English (the student's own class:
+// 1st + 2nd Paper together). Progress comes from lesson_progress; a course
+// the student is not enrolled in shows its not-enrolled state honestly.
+if ($path === '/my-courses' && $method === 'GET') {
+    $u = role_required('student');
+    $bucket = student_class_bucket($u);
+    $cards = [];
+    // Spoken English — one course for all.
+    $spoken = q1("SELECT * FROM courses WHERE track='spoken' AND active=1 ORDER BY id LIMIT 1");
+    if ($spoken) {
+        $sid = (int)$spoken['id'];
+        $total = (int)(q1('SELECT COUNT(*) AS n FROM lessons WHERE course_id=?', [$sid])['n'] ?? 0);
+        $done = lesson_progress((int)$u['id'], $sid);
+        $enrolled = is_enrolled($u['phone'], $sid);
+        $cards[] = [
+            'track' => 'spoken', 'title' => t('track_spoken_full'), 'desc' => t('track_spoken_d'),
+            'banner' => '/assets/img/banner-spoken.png', 'banner_alt' => 'Spoken English — Speak with Confidence',
+            'total' => $total, 'done_count' => count($done), 'enrolled' => $enrolled,
+            'course_url' => '/course/' . $sid,
+            'buy_url' => '/buy/' . $sid,
+            'continue_url' => $enrolled ? '/course/' . $sid . '/lesson/' . next_lesson_no((int)$u['id'], $sid) : null,
+            'btn_class' => 'btn-green',
+        ];
+    }
+    // Academic English — the student's own class (1st + 2nd Paper together).
+    $papers = $bucket !== null ? q('SELECT * FROM courses WHERE active=1 AND track=? AND class_level=? ORDER BY id', ['academic', $bucket]) : [];
+    if (!empty($papers)) {
+        $total = 0; $done_count = 0; $enrolled = false; $continue_url = null;
+        foreach ($papers as $p) {
+            $pid = (int)$p['id'];
+            $pt = (int)(q1('SELECT COUNT(*) AS n FROM lessons WHERE course_id=?', [$pid])['n'] ?? 0);
+            $pd = lesson_progress((int)$u['id'], $pid);
+            $total += $pt; $done_count += count($pd);
+            if (is_enrolled($u['phone'], $pid)) $enrolled = true;
+            // First uncompleted lesson across the papers, in order.
+            if ($continue_url === null && count($pd) < $pt) {
+                $continue_url = '/course/' . $pid . '/lesson/' . next_lesson_no((int)$u['id'], $pid);
+            }
+        }
+        if ($continue_url === null) $continue_url = '/course/' . (int)$papers[0]['id'] . '/lesson/1';
+        $cards[] = [
+            'track' => 'academic', 'title' => sprintf(t('academic_class'), num($bucket)), 'desc' => t('track_academic_d'),
+            'banner' => '/assets/img/banner-academic.png', 'banner_alt' => 'Academic English — NCTB English for Today, Grammar & Composition',
+            'total' => $total, 'done_count' => $done_count, 'enrolled' => $enrolled,
+            'course_url' => '/courses?track=academic&class=' . urlencode($bucket),
+            'buy_url' => '/buy/' . (int)$papers[0]['id'],
+            'continue_url' => $enrolled ? $continue_url : null,
+            'btn_class' => 'btn-primary',
+        ];
+    }
+    render('my_courses', ['title' => t('my_courses_title') . ' — Redway Academy', 'cards' => $cards, 'class_bucket' => $bucket]);
 }
 if ($path === '/progress') {
     $u = login_required();

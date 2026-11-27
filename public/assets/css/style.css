@@ -160,6 +160,11 @@ section{margin-top:40px}
 .track-fee strong{font-family:"Poppins",sans-serif}
 .track-live{font-size:14px;font-weight:600;color:var(--green-dark)}
 .track-count{font-size:14px}
+.track-progress{height:10px;background:var(--grey-soft);border:1px solid var(--line);border-radius:999px;overflow:hidden;margin:6px 0 4px}
+.track-progress i{display:block;height:100%;background:var(--green)}
+.track-progress-txt{font-size:13px;color:var(--muted);font-weight:600}
+.track-cover>a{display:block;width:100%;height:100%}
+.track-body h2 a{color:inherit;text-decoration:none}
 .track-bullets{list-style:none;padding:0;margin:12px 0;display:grid;gap:8px}
 .track-bullets li{display:flex;gap:10px;align-items:start;font-weight:600}
 .track-bullets li::before{content:"✓";color:var(--green);font-weight:800;flex-shrink:0}
@@ -716,7 +721,7 @@ input:focus,select:focus,textarea:focus{outline:3px solid var(--blue);outline-of
 .footer-brand .social-row a{border:0;color:#fff}
 .footer-brand .social-row a:hover{color:#fff}
 /* 6 social icons fit at 375px: the row wraps instead of clipping. */
-.social-row{flex-wrap:wrap}
+.social-row{display:grid;grid-template-columns:repeat(3,48px)}
 /* Social icons: SOLID brand-colour circles with WHITE glyphs, 48px,
    soft shadow, hover lift. */
 .social-row a{width:48px;height:48px;border:0;color:#fff;box-shadow:0 3px 8px rgba(60,64,67,.25);transition:transform .18s ease,box-shadow .18s ease}
@@ -728,7 +733,7 @@ input:focus,select:focus,textarea:focus{outline:3px solid var(--blue);outline-of
 .social-row a[aria-label="Instagram"]{background:linear-gradient(45deg,#FEDA75,#FA7E1E,#D62976,#962FBF,#4F5BD5)}
 .social-row a[aria-label="TikTok"]{background:#000000}
 /* Community page: all six channels as solid brand-colour pill buttons. */
-.social-grid{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+.social-grid{display:flex;flex-wrap:nowrap;gap:12px;margin-top:20px;overflow-x:auto;padding:6px 2px}
 .social-btn{display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:12px 22px;border-radius:999px;color:#fff;font-weight:700;font-size:16px;text-decoration:none;box-shadow:0 3px 8px rgba(60,64,67,.25);transition:transform .18s ease,box-shadow .18s ease}
 .social-btn:hover{transform:translateY(-3px);box-shadow:0 8px 16px rgba(60,64,67,.35);color:#fff}
 .social-btn svg{flex-shrink:0}

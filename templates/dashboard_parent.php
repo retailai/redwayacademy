@@ -10,6 +10,7 @@ $dash_links = [
     ['/dashboard/parent#checkins', t('side_checkin'), count($checkins ?? [])],
     ['/notifications', t('side_notifications'), $unread_count],
     ['/feedback', t('side_feedback')],
+    ['/logout', t('menu_logout')],
 ];
 ?>
 <div class="dash-layout">
