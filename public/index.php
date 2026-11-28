@@ -87,11 +87,11 @@ if ($path === '/health') {
 }
 if ($path === '/robots.txt') {
     header('Content-Type: text/plain');
-    echo "User-agent: *\nAllow: /\nSitemap: https://redwayacademy.com/sitemap.xml\n"; exit;
+    echo "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /dashboard\nDisallow: /my-courses\nDisallow: /checkin\nDisallow: /uploads/\nDisallow: /logout\nSitemap: https://redwayacademy.com/sitemap.xml\n"; exit;
 }
 if ($path === '/sitemap.xml') {
     header('Content-Type: application/xml');
-    $urls = ['https://redwayacademy.com/', 'https://redwayacademy.com/courses', 'https://redwayacademy.com/retake', 'https://redwayacademy.com/testimonials', 'https://redwayacademy.com/login', 'https://redwayacademy.com/register'];
+    $urls = ['https://redwayacademy.com/', 'https://redwayacademy.com/courses', 'https://redwayacademy.com/retake', 'https://redwayacademy.com/testimonials', 'https://redwayacademy.com/community', 'https://redwayacademy.com/homework', 'https://redwayacademy.com/terms', 'https://redwayacademy.com/privacy', 'https://redwayacademy.com/refund'];
     foreach (q('SELECT id FROM courses') as $c) $urls[] = 'https://redwayacademy.com/course/' . $c['id'];
     echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n";
     foreach ($urls as $u) echo '  <url><loc>' . e($u) . "</loc></url>\n";
@@ -130,7 +130,7 @@ if ($path === '/' && $method === 'GET') {
         $enrolled = enrolled_courses($me['phone'], student_class_bucket($me));
         $resume = $enrolled[0] ?? null;
     }
-    render('home', ['title' => 'Redway Academy — Mistakes Mark the Way',
+    render('home', ['title' => 'Redway Academy — NCTB English (Class 6–12) & Spoken English | Mistakes Mark the Way', 'description' => 'NCTB Academic English (Class 6–12, SSC & HSC) and Spoken English, live online 3 days a week. Fee ৳1450/month. Mistakes Mark the Way.',
         'courses' => q('SELECT * FROM courses WHERE active=1 ORDER BY id'),
         'total_lessons' => (int)db()->query('SELECT COUNT(*) FROM lessons')->fetchColumn(),
         'testimonials' => q("SELECT * FROM testimonials WHERE status='approved' ORDER BY id DESC LIMIT 6"),
@@ -219,7 +219,7 @@ if ($path === '/courses' && $method === 'GET') {
         foreach ($over as $k => $v) $f[$k] = $v;
         return '/courses' . ($f ? '?' . http_build_query($f) : '');
     };
-    render('courses', ['title' => 'Courses — Redway Academy', 'courses' => $rows,
+    render('courses', ['title' => 'English Courses — Spoken English & NCTB Academic English (Class 6–12) | Redway Academy', 'description' => 'Two English courses: Spoken English for all, and NCTB Academic English for Class 6–12 (English for Today + Grammar & Composition). Live online, ৳1450/month.', 'courses' => $rows,
         'step' => $step, 'track' => $track, 'class' => $class, 'edu' => $edu, 'q' => $qtext,
         'classes' => $classes, 'counts' => $counts, 'lesson_counts' => $lesson_counts,
         'academic_classes' => $academic_classes, 'page' => $page, 'pages' => $pages,
@@ -244,7 +244,7 @@ if (preg_match('#^/course/(\d+)$#', $path, $m) && $method === 'GET') {
     $can_view = $enrolled || ($u && $u['role'] === 'teacher');
     $track = (string)($c['track'] ?? 'academic');
     $subscribed = $u && $u['role'] === 'student' ? is_subscribed($u['phone'], $track) : false;
-    render('course_detail', ['title' => $c['title'] . ' — Redway Academy', 'course' => $c,
+    render('course_detail', ['title' => $c['title'] . ' — Redway Academy', 'description' => $c['description'], 'course' => $c,
         'is_enrolled' => $enrolled, 'can_view_lessons' => $can_view,
         'track_fee' => track_monthly_fee($track), 'is_subscribed' => $subscribed,
         'lessons' => $can_view ? q('SELECT lesson_no, title FROM lessons WHERE course_id=? ORDER BY lesson_no', [(int)$c['id']]) : [],
@@ -319,20 +319,20 @@ if ($path === '/testimonials') {
         flash(t('review_sent'));
         redirect('/testimonials');
     }
-    render('testimonials', ['title' => 'Reviews — Redway Academy',
+    render('testimonials', ['title' => 'Student Reviews — Redway Academy | NCTB & Spoken English', 'description' => 'What students and parents say about Redway Academy — NCTB English and Spoken English classes in Dhaka. Mistakes Mark the Way.',
         'testimonials' => q("SELECT * FROM testimonials WHERE status='approved' ORDER BY id DESC")]);
 }
 if ($path === '/community' && $method === 'GET') {
-    render('community', ['title' => t('nav_community') . ' — Redway Academy']);
+    render('community', ['title' => t('nav_community') . ' — Redway Academy', 'description' => 'Join the Redway Academy community — Spoken English and NCTB Academic English (Class 6–12) in Dhaka. Find us on Facebook, YouTube, Instagram and LinkedIn.']);
 }
 if ($path === '/terms' && $method === 'GET') {
-    render('terms', ['title' => t('terms_title') . ' — Redway Academy']);
+    render('terms', ['title' => t('terms_title') . ' — Redway Academy', 'description' => 'Terms of service for Redway Academy — NCTB English and Spoken English courses in Dhaka.']);
 }
 if ($path === '/privacy' && $method === 'GET') {
-    render('privacy', ['title' => t('priv_title') . ' — Redway Academy']);
+    render('privacy', ['title' => t('priv_title') . ' — Redway Academy', 'description' => 'Privacy policy of Redway Academy — how we use your information when you register for our English courses.']);
 }
 if ($path === '/refund' && $method === 'GET') {
-    render('refund', ['title' => t('ref_title') . ' — Redway Academy']);
+    render('refund', ['title' => t('ref_title') . ' — Redway Academy', 'description' => 'Refund policy for Redway Academy courses — NCTB English and Spoken English, Dhaka.']);
 }
 
 // --- Auth -------------------------------------------------------------------
@@ -381,7 +381,7 @@ if ($path === '/register') {
         flash(sprintf(t('welcome'), $name, t('role_' . $role)));
         redirect($role === 'student' ? '/my-courses' : '/dashboard');
     }
-    render('register', ['title' => 'Register — Redway Academy']);
+    render('register', ['title' => 'Register — Redway Academy', 'noindex' => true]);
 }
 if ($path === '/login') {
     // Already logged in? Go to the student's My Courses, or own dashboard — never show the login form again.
@@ -393,13 +393,13 @@ if ($path === '/login') {
         $phone = digits_only(post('phone')); $password = $_POST['password'] ?? '';
         if (login_blocked($phone)) {
             flash(t('login_locked'));
-            render('login', ['title' => 'Login — Redway Academy']); exit;
+            render('login', ['title' => 'Login — Redway Academy', 'noindex' => true]); exit;
         }
         $u = q1('SELECT * FROM users WHERE phone=?', [$phone]);
         if ($u && password_verify($password, $u['password_hash'])) {
             if ((int)($u['active'] ?? 1) === 0) {
                 flash(t('account_deactivated'));
-                render('login', ['title' => 'Login — Redway Academy']); exit;
+                render('login', ['title' => 'Login — Redway Academy', 'noindex' => true]); exit;
             }
             // A role subdomain only accepts that role's accounts.
             if ($sub_role !== null && $u['role'] !== $sub_role) {
@@ -426,7 +426,7 @@ if ($path === '/login') {
         record_failed_login($phone);
         flash(t('wrong_login'));
     }
-    render('login', ['title' => 'Login — Redway Academy']);
+    render('login', ['title' => 'Login — Redway Academy', 'noindex' => true]);
 }
 if ($path === '/logout' && $method === 'GET') {
     logout_user();
@@ -593,7 +593,7 @@ if ($path === '/homework') {
         flash(t('homework_created'));
         redirect('/homework');
     }
-    render('homework', ['title' => 'Homework — Redway Academy', 'homework' => q('SELECT * FROM homework ORDER BY id DESC')]);
+    render('homework', ['title' => 'Homework — Redway Academy', 'description' => 'Homework and practice for Redway Academy students — NCTB English and Spoken English, Class 6–12.', 'homework' => q('SELECT * FROM homework ORDER BY id DESC')]);
 }
 if (preg_match('#^/homework/(\d+)/submit$#', $path, $m) && $method === 'POST') {
     $u = login_required();
@@ -702,7 +702,7 @@ if ($path === '/retake') {
         flash(sprintf(t('retake_sent'), str_replace('_', ' ', $status), $reasons));
         redirect('/retake/' . $id);
     }
-    render('retake', ['title' => 'Free Retake Registration — Redway Academy',
+    render('retake', ['title' => 'Free Retake Registration — Redway Academy', 'description' => 'Free SSC & HSC Second Chance (retake) registration at Redway Academy — register free with your admit card and tabulation sheet. NCTB English, Dhaka.',
         'campaign_off' => !retake_campaign_active()]);
 }
 if (preg_match('#^/retake/(\d+)$#', $path, $m) && $method === 'GET') {

@@ -2,6 +2,9 @@
 # The web root is public/ ; this file forwards all requests there.
 <IfModule mod_rewrite.c>
   RewriteEngine On
+  # Canonical host is non-www: redirect www to non-www (301).
+  RewriteCond %{HTTP_HOST} ^www\.redwayacademy\.com [NC]
+  RewriteRule ^(.*)$ https://redwayacademy.com/$1 [L,R=301]
   RewriteRule ^$ public/ [L]
   RewriteRule (.*) public/$1 [L]
 </IfModule>

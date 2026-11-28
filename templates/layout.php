@@ -3,7 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Redway Academy — NCTB English for Class 6–12. Mistakes Mark the Way: English for Today, English 2nd Paper and Spoken English.">
+<meta name="description" content="<?= e($description ?? 'Redway Academy — NCTB English for Class 6–12. Mistakes Mark the Way: English for Today, English 2nd Paper and Spoken English.') ?>">
+<?php $__canon = strtok($_SERVER['REQUEST_URI'] ?? '/', '?') ?: '/'; ?>
+<?php if (!empty($noindex)): ?><meta name="robots" content="noindex, nofollow"><?php endif; ?>
+<link rel="canonical" href="https://redwayacademy.com<?= e($__canon) ?>">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Redway Academy">
+<meta property="og:title" content="<?= e($title ?? 'Redway Academy — Mistakes Mark the Way') ?>">
+<meta property="og:description" content="<?= e($description ?? 'Redway Academy — NCTB English for Class 6–12. Mistakes Mark the Way: English for Today, English 2nd Paper and Spoken English.') ?>">
+<meta property="og:url" content="https://redwayacademy.com<?= e($__canon) ?>">
+<meta property="og:image" content="https://redwayacademy.com/assets/img/logo.png">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#4285F4">
 <meta name="csrf-token" content="<?= e($csrf_token ?? '') ?>">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -14,6 +24,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=v7">
+<script type="application/ld+json"><?= json_encode(['@context' => 'https://schema.org', '@type' => 'EducationalOrganization', 'name' => 'Redway Academy', 'url' => 'https://redwayacademy.com/', 'logo' => 'https://redwayacademy.com/assets/img/logo.png', 'slogan' => 'Mistakes Mark the Way', 'telephone' => '+8801712506612', 'address' => ['@type' => 'PostalAddress', 'streetAddress' => 'Nikunja 2, Khilkhet', 'addressLocality' => 'Dhaka', 'postalCode' => '1229', 'addressCountry' => 'BD'], 'sameAs' => ['https://www.youtube.com/@RedwayAcademy', 'https://www.facebook.com/profile.php?id=61596806529388', 'https://www.linkedin.com/company/redwayacademy', 'https://www.instagram.com/redwayacademy/']], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?></script>
+<?php if (!empty($course)): ?><script type="application/ld+json"><?= json_encode(['@context' => 'https://schema.org', '@type' => 'Course', 'name' => $course['title'], 'description' => $course['description'], 'provider' => ['@type' => 'EducationalOrganization', 'name' => 'Redway Academy', 'url' => 'https://redwayacademy.com/'], 'offers' => ['@type' => 'Offer', 'price' => $track_fee ?? $course['price_bdt'], 'priceCurrency' => 'BDT']], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?></script><?php endif; ?>
 </head>
 <body data-soon-msg="<?= e(t('soon_msg')) ?>">
 <a class="skip-link" href="#main">Skip to main content</a>
